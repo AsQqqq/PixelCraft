@@ -1,0 +1,11 @@
+*~
+plan/
+log/
+/target
+/dist
+/corpus
+.DS_Store
+/.claude/
+/target-*/
+/craft-fonts/
+/source_/

@@ -1,0 +1,56 @@
+[workspace]
+resolver = "3"
+members = ["crates/*", "apps/*", "xtask"]
+default-members = ["crates/*", "apps/pixelcraft", "apps/pixelcraft-cli", "xtask"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+rust-version = "1.90"
+repository = "https://github.com/storytold/pixelcraft"
+
+[workspace.dependencies]
+# internal
+pixelcraft-geom = { path = "crates/geom" }
+pixelcraft-color = { path = "crates/color" }
+pixelcraft-raster = { path = "crates/raster" }
+pixelcraft-ase = { path = "crates/ase" }
+pixelcraft-doc = { path = "crates/doc" }
+pixelcraft-paint = { path = "crates/paint" }
+pixelcraft-compose = { path = "crates/compose" }
+pixelcraft-io = { path = "crates/io" }
+pixelcraft-engine = { path = "crates/engine" }
+pixelcraft-ui-egui = { path = "crates/ui-egui" }
+pixelcraft-mcp = { path = "crates/mcp" }
+
+# foundation
+thiserror = "2"
+serde = { version = "1", features = ["derive", "rc"] }
+serde_json = "1"
+log = "0.4"
+
+# ui
+egui = "0.36"
+eframe = { version = "0.36", default-features = false }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+dbg_macro = "warn"
+todo = "warn"
+too_many_arguments = "allow"
+type_complexity = "allow"
+
+[profile.dev.package."*"]
+opt-level = 2
+
+[profile.dev]
+opt-level = 1
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 16
+debug = 0
