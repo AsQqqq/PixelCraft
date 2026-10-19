@@ -1,0 +1,19 @@
+[package]
+name = "pixelcraft-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "PixelCraft command line: inspect, convert, run commands and serve MCP without a window"
+publish = false
+
+[[bin]]
+name = "pixelcraft-cli"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+pixelcraft-engine = { workspace = true }
+pixelcraft-mcp = { workspace = true }
+serde_json = { workspace = true }

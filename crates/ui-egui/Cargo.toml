@@ -1,0 +1,21 @@
+[package]
+name = "pixelcraft-ui-egui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "PixelCraft egui frontend (Aseprite-style UI); swappable — nothing below depends on it"
+
+[lints]
+workspace = true
+
+[dependencies]
+pixelcraft-engine = { workspace = true }
+egui = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+log = { workspace = true }
+
+[dev-dependencies]
+egui_kittest = { version = "0.36", features = ["wgpu", "snapshot"] }
+# Hardware texture sampling in snapshots, so nearest-neighbour pixels stay sharp.
+egui-wgpu = "0.36"

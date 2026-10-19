@@ -1,0 +1,15 @@
+[package]
+name = "pixelcraft-doc"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "PixelCraft document model: sprite, layers, frames, cels, tags, palette (pure data)"
+
+[lints]
+workspace = true
+
+[dependencies]
+pixelcraft-geom = { workspace = true }
+pixelcraft-color = { workspace = true }
+pixelcraft-raster = { workspace = true }
+serde = { workspace = true }

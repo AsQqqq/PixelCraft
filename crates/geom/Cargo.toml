@@ -1,0 +1,12 @@
+[package]
+name = "pixelcraft-geom"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "PixelCraft geometry: integer points, sizes and rectangles on the pixel grid"
+
+[lints]
+workspace = true
+
+[dependencies]
+serde = { workspace = true }

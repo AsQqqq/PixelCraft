@@ -1,0 +1,22 @@
+[package]
+name = "pixelcraft-engine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "PixelCraft engine: sessions, commands, history"
+
+[lints]
+workspace = true
+
+[dependencies]
+pixelcraft-geom = { workspace = true }
+pixelcraft-color = { workspace = true }
+pixelcraft-raster = { workspace = true }
+pixelcraft-doc = { workspace = true }
+pixelcraft-paint = { workspace = true }
+pixelcraft-compose = { workspace = true }
+pixelcraft-io = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+log = { workspace = true }

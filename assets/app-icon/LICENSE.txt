@@ -1,0 +1,3 @@
+The PixelCraft app icon files in this directory are original work by the PixelCraft contributors,
+licensed under the MIT License or the Apache License, Version 2.0, at your option
+(see LICENSE-MIT and LICENSE-APACHE at the repository root).

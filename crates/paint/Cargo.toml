@@ -1,0 +1,14 @@
+[package]
+name = "pixelcraft-paint"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "PixelCraft pixel tools: pencil, line, flood fill and other pixel-exact drawing algorithms"
+
+[lints]
+workspace = true
+
+[dependencies]
+pixelcraft-geom = { workspace = true }
+pixelcraft-color = { workspace = true }
+pixelcraft-raster = { workspace = true }

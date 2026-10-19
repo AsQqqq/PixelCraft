@@ -1,0 +1,15 @@
+[package]
+name = "pixelcraft-compose"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "PixelCraft compositor: flattens a frame of a sprite into an RGBA image (the CPU oracle)"
+
+[lints]
+workspace = true
+
+[dependencies]
+pixelcraft-geom = { workspace = true }
+pixelcraft-color = { workspace = true }
+pixelcraft-raster = { workspace = true }
+pixelcraft-doc = { workspace = true }

@@ -1,0 +1,15 @@
+[package]
+name = "pixelcraft-raster"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "PixelCraft raster images in RGBA, grayscale or indexed pixel formats"
+
+[lints]
+workspace = true
+
+[dependencies]
+pixelcraft-geom = { workspace = true }
+pixelcraft-color = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }

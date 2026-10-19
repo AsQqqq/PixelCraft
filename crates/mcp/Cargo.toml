@@ -1,0 +1,13 @@
+[package]
+name = "pixelcraft-mcp"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "PixelCraft MCP server over the engine: every command is reachable by agents"
+
+[lints]
+workspace = true
+
+[dependencies]
+pixelcraft-engine = { workspace = true }
+serde_json = { workspace = true }

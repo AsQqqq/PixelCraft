@@ -1,0 +1,12 @@
+[package]
+name = "pixelcraft-ase"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Clean-room reader and writer for the .ase/.aseprite file format, from its public specification (standalone)"
+
+[lints]
+workspace = true
+
+[dependencies]
+thiserror = { workspace = true }

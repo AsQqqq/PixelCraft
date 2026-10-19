@@ -1,0 +1,18 @@
+[package]
+name = "pixelcraft"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+default-run = "pixelcraft"
+description = "PixelCraft: an open-source, native pixel-art and sprite animation editor"
+
+[lints]
+workspace = true
+
+[dependencies]
+pixelcraft-engine = { workspace = true }
+pixelcraft-ui-egui = { workspace = true }
+eframe = { workspace = true, features = ["default_fonts", "wgpu", "accesskit", "wayland", "x11"] }
+egui = { workspace = true }
+log = { workspace = true }
