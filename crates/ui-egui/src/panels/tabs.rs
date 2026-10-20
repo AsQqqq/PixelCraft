@@ -1,6 +1,7 @@
 //! The tab strip under the menu bar: Home (when open), then one tab per sprite. A sprite with
 //! unsaved changes shows ● instead of ×; either closes it (asking first when unsaved). With no
-//! tabs at all, a small Home button stays at the left.
+//! tabs at all, a small Home button stays at the left. Double-clicking the free space after the
+//! tabs opens New Sprite, like the target app.
 
 use crate::icons::{self, Icon};
 use crate::theme::{Tokens, size};
@@ -21,14 +22,14 @@ enum Click {
     CloseHome,
     Doc(usize),
     Close(usize),
+    New,
 }
 
 fn tab(ui: &mut egui::Ui, t: &Tokens, home: bool, label: &str, on: bool, closer: Icon, tip: &str) -> (bool, bool) {
     let mut out = (false, false);
-    egui::Frame::NONE
+    let frame = egui::Frame::NONE
         .fill(if on { t.panel } else { t.panel_alt })
-        .corner_radius(egui::CornerRadius { nw: 4, ne: 4, sw: 0, se: 0 })
-        .inner_margin(egui::Margin::symmetric(8, 2))
+        .inner_margin(egui::Margin { left: 8, right: 4, top: 2, bottom: 0 })
         .show(ui, |ui| {
             let color = if on { t.text } else { t.text_dim };
             if home {
@@ -37,6 +38,16 @@ fn tab(ui: &mut egui::Ui, t: &Tokens, home: bool, label: &str, on: bool, closer:
             out.0 |= ui.add(egui::Label::new(egui::RichText::new(label).color(color)).sense(egui::Sense::click())).clicked();
             out.1 = icon_button(ui, closer, 14.0, color, t).on_hover_text(tip).clicked();
         });
+    // Pixel tab edges: outline on top and sides, the active tab opens into the panel below.
+    let r = frame.response.rect;
+    let px = crate::theme::size::UI_PX;
+    let p = ui.painter();
+    p.rect_filled(egui::Rect::from_min_size(r.min, egui::vec2(r.width(), px)), 0.0, t.border);
+    p.rect_filled(egui::Rect::from_min_size(r.min, egui::vec2(px, r.height())), 0.0, t.border);
+    p.rect_filled(egui::Rect::from_min_size(egui::pos2(r.max.x - px, r.min.y), egui::vec2(px, r.height())), 0.0, t.border);
+    if on {
+        p.rect_filled(egui::Rect::from_min_size(r.min + egui::vec2(px, px), egui::vec2(r.width() - 2.0 * px, px)), 0.0, t.bevel_light);
+    }
     out
 }
 
@@ -45,6 +56,7 @@ pub fn show(app: &mut PixelApp, ui: &mut egui::Ui, t: &Tokens) {
     let active = app.active_doc();
     let (home_open, home_on) = (app.ui.home_open, app.ui.home_active);
     let mut click = None;
+    let mut free = None;
     egui::Panel::top("tabs")
         .exact_size(size::TAB_BAR_H)
         .frame(egui::Frame::NONE.fill(t.window).inner_margin(egui::Margin { left: 4, right: 4, top: 2, bottom: 0 }))
@@ -72,8 +84,15 @@ pub fn show(app: &mut PixelApp, ui: &mut egui::Ui, t: &Tokens) {
                         click = Some(Click::Close(i));
                     }
                 }
+                // The free space after the last tab: a double click starts a new sprite.
+                let rest = ui.available_rect_before_wrap();
+                free = (rest.width() > 0.0).then_some(rest);
+                if rest.width() > 0.0 && ui.allocate_rect(rest, egui::Sense::click()).double_clicked() {
+                    click = Some(Click::New);
+                }
             });
         });
+    app.hit.tab_free = free;
     match click {
         Some(Click::Home) => app.act(UiAction::Home),
         Some(Click::CloseHome) => {
@@ -85,6 +104,7 @@ pub fn show(app: &mut PixelApp, ui: &mut egui::Ui, t: &Tokens) {
             app.ui.home_active = false;
         }
         Some(Click::Close(i)) => app.request_close(i),
+        Some(Click::New) => app.act(UiAction::NewFile),
         None => {}
     }
 }

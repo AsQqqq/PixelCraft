@@ -93,7 +93,7 @@ pub fn show(app: &mut PixelApp, ui: &mut egui::Ui, t: &Tokens) {
                         r.center(),
                         Align2::CENTER_CENTER,
                         (f + 1).to_string(),
-                        FontId::proportional(11.0),
+                        FontId::proportional(crate::pixel_font::SIZE),
                         if f == cur_frame { t.on_accent } else { t.text_dim },
                     );
                 }
@@ -116,7 +116,7 @@ pub fn show(app: &mut PixelApp, ui: &mut egui::Ui, t: &Tokens) {
                         pos2(area.min.x + EYE_W + LOCK_W + 4.0, y + row_h / 2.0),
                         Align2::LEFT_CENTER,
                         &layer.name,
-                        FontId::proportional(12.0),
+                        FontId::proportional(crate::pixel_font::SIZE),
                         name_color,
                     );
                     for f in 0..frames {

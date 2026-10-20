@@ -44,7 +44,7 @@ fn stroke(s: &mut Session, p: &Json) -> Result<Json> {
         }
         ColorMode::Indexed => vec![index],
     };
-    let cel = sp.cel_mut(layer, frame).ok_or_else(|| bad(ID, "the current layer has no cel in this frame"))?;
+    let cel = sp.cel_or_new(layer, frame).map_err(|e| bad(ID, e.to_string()))?;
     let origin = cel.position;
     let local = |x: i32, y: i32| Point::new(x.saturating_sub(origin.x), y.saturating_sub(origin.y));
     pixelcraft_paint::stroke_line(Arc::make_mut(&mut cel.image), local(x0, y0), local(x1, y1), &px);

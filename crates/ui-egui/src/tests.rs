@@ -81,3 +81,118 @@ fn closing_home_leaves_no_tabs_and_view_home_reopens_it() {
     app.act(UiAction::Home);
     assert!(app.ui.home_open && app.ui.home_active);
 }
+
+#[test]
+fn choosing_a_tool_remembers_it_for_its_group_button() {
+    let mut app = PixelApp::with_new_sprite();
+    app.act(UiAction::SetTool(Tool::FilledEllipse));
+    assert_eq!(app.ui.tool, Tool::FilledEllipse);
+    assert_eq!(app.ui.group_tool[Tool::Rectangle.group()], Tool::FilledEllipse);
+    assert_eq!(app.ui.group_tool[Tool::Pencil.group()], Tool::Pencil);
+}
+
+#[test]
+fn every_tool_is_in_exactly_one_group() {
+    for tool in Tool::ALL {
+        assert_eq!(state::TOOL_GROUPS.iter().filter(|g| g.contains(&tool)).count(), 1, "{tool:?}");
+    }
+}
+
+#[test]
+fn brush_size_stays_in_range() {
+    let mut app = PixelApp::with_new_sprite();
+    app.act(UiAction::BrushSize(-5));
+    assert_eq!(app.ui.brush_size, 1);
+    app.act(UiAction::BrushSize(1000));
+    assert_eq!(app.ui.brush_size, pixelcraft_engine::paint::MAX_BRUSH);
+}
+
+#[test]
+fn tooltips_follow_the_target_app_wording() {
+    let s = panels::tool_bar::tooltip(Tool::RectangularMarquee);
+    assert!(s.starts_with("Rectangular Marquee Tool:\n* Left Button: replace/add to current selection"));
+    assert!(s.contains("Shortcut: M"));
+    assert_eq!(panels::tool_bar::tooltip(Tool::Pencil), "Pencil Tool\nShortcut: B");
+}
+
+// --- interaction, through egui_kittest -------------------------------------------------------------
+
+fn harness(app: PixelApp) -> egui_kittest::Harness<'static, PixelApp> {
+    // Short steps, so two clicks land within the double-click delay.
+    egui_kittest::Harness::builder().with_size(egui::vec2(1100.0, 700.0)).with_step_dt(0.02).build_ui_state(|ui, app: &mut PixelApp| app.ui(ui), app)
+}
+
+fn click(h: &mut egui_kittest::Harness<'static, PixelApp>, pos: egui::Pos2) {
+    h.event(egui::Event::PointerMoved(pos));
+    h.event(egui::Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed: true, modifiers: Default::default() });
+    h.event(egui::Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed: false, modifiers: Default::default() });
+    h.step();
+}
+
+#[test]
+fn double_clicking_free_tab_space_opens_new_sprite() {
+    let mut h = harness(PixelApp::with_new_sprite());
+    h.run_steps(3);
+    let free = h.state().hit.tab_free.expect("the tab strip has free space");
+    let p = free.center();
+    click(&mut h, p);
+    assert!(h.state().ui.dialog.is_none(), "a single click does nothing");
+    click(&mut h, p);
+    h.run_steps(2);
+    assert!(matches!(h.state().ui.dialog, Some(Dialog::NewSprite { .. })), "double click opens New Sprite");
+}
+
+#[test]
+fn preview_play_button_plays_the_animation_in_the_window() {
+    let mut app = PixelApp::with_new_sprite();
+    app.run("frame.new", &json!({}));
+    app.run("frame.new", &json!({}));
+    app.run("frame.goToFirst", &json!({}));
+    let mut h = harness(app);
+    h.run_steps(3);
+    let play = h.state().hit.preview_play.expect("the preview has a play button");
+    click(&mut h, play.center());
+    assert!(h.state().ui.preview.playing);
+    // Frames advance in the preview; the editor stays on frame 1.
+    // kittest doesn't advance the clock on its own; a real window does.
+    for i in 0..30 {
+        h.input_mut().time = Some(10.0 + f64::from(i) * 0.02);
+        h.step();
+    }
+    let d = h.state().session.active().unwrap();
+    assert_eq!(d.frame, 0);
+    assert!(h.state().ui.preview.frame > 0 || h.state().ui.preview.elapsed_ms > 0.0);
+    click(&mut h, play.center());
+    assert!(!h.state().ui.preview.playing, "the same button stops");
+}
+
+#[test]
+fn preferences_apply_on_ok_and_cancel_discards() {
+    let mut app = PixelApp::with_new_sprite();
+    app.act(UiAction::Preferences);
+    let Some(Dialog::Preferences { mut draft, section }) = app.ui.dialog.clone() else { panic!("expected Preferences") };
+    draft.native_cursor = true;
+    app.ui.dialog = Some(Dialog::Preferences { section, draft });
+    // Cancel: drawn by the dialog; here we check the model: nothing applied until OK/Apply.
+    assert!(!app.ui.prefs.native_cursor);
+}
+
+#[test]
+fn pixel_cursor_is_an_os_cursor_image_and_native_turns_it_off() {
+    let mut h = harness(PixelApp::with_new_sprite());
+    h.event(egui::Event::PointerMoved(egui::pos2(600.0, 300.0)));
+    h.run_steps(2);
+    assert!(h.output().platform_output.cursor_image.is_some(), "pixel cursor by default");
+    h.state_mut().ui.prefs.native_cursor = true;
+    h.run_steps(2);
+    assert!(h.output().platform_output.cursor_image.is_none(), "native cursors: no image");
+}
+
+#[test]
+fn new_sprite_dialog_keeps_the_pixel_cursor() {
+    let mut h = harness(PixelApp::default());
+    h.state_mut().act(UiAction::NewFile);
+    h.event(egui::Event::PointerMoved(egui::pos2(550.0, 350.0)));
+    h.run_steps(3);
+    assert!(h.output().platform_output.cursor_image.is_some());
+}

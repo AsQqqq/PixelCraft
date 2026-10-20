@@ -8,7 +8,7 @@
 use egui::{Align, Layout, RichText};
 use serde_json::json;
 
-use crate::state::{Dialog, NewSpriteForm};
+use crate::state::{Dialog, NewSpriteForm, PrefSection, Preferences};
 use crate::theme::Tokens;
 use crate::{PixelApp, UiAction};
 
@@ -20,6 +20,7 @@ pub fn show(app: &mut PixelApp, ctx: &egui::Context, t: &Tokens) {
     match dialog {
         Dialog::NewSprite { form, width, height, focus } => new_sprite(app, ctx, t, form, width, height, focus),
         Dialog::Unsaved { uid, quitting } => unsaved(app, ctx, uid, quitting),
+        Dialog::Preferences { section, draft } => preferences(app, ctx, t, section, draft),
     }
 }
 
@@ -147,4 +148,61 @@ fn unsaved(app: &mut PixelApp, ctx: &egui::Context, uid: u64, quitting: bool) {
         }
         None => {}
     }
+}
+
+/// Edit ▸ Preferences: sections on the left, the section's options on the right; OK applies and
+/// closes, Apply applies, Cancel (or Escape) discards.
+fn preferences(app: &mut PixelApp, ctx: &egui::Context, t: &Tokens, mut section: PrefSection, mut draft: Preferences) {
+    let escape = ctx.input(|i| i.key_pressed(egui::Key::Escape));
+    let (mut ok, mut apply, mut cancel) = (false, false, escape);
+    egui::Modal::new(egui::Id::new("preferences")).show(ctx, |ui| {
+        ui.set_width(560.0);
+        ui.heading("Preferences");
+        ui.add_space(4.0);
+        ui.horizontal_top(|ui| {
+            ui.vertical(|ui| {
+                ui.set_width(130.0);
+                for (s, label) in [(PrefSection::Editor, "Editor"), (PrefSection::Cursors, "Cursors")] {
+                    if ui.selectable_label(section == s, label).clicked() {
+                        section = s;
+                    }
+                }
+            });
+            ui.separator();
+            ui.vertical(|ui| match section {
+                PrefSection::Cursors => {
+                    ui.label(RichText::new("UI Mouse Cursor").color(t.text_dim));
+                    ui.checkbox(&mut draft.native_cursor, "Use native mouse cursors");
+                    ui.add_enabled_ui(!draft.native_cursor, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.label("Mouse Cursor Scale:");
+                            for (n, label) in [(1u8, "100%"), (2, "200%"), (3, "300%")] {
+                                ui.selectable_value(&mut draft.cursor_scale, n, label);
+                            }
+                        });
+                    });
+                }
+                PrefSection::Editor => {
+                    ui.label(RichText::new("Editor").color(t.text_dim));
+                    ui.checkbox(&mut draft.invert_wheel_zoom, "Invert the mouse wheel zoom direction");
+                }
+            });
+        });
+        ui.add_space(8.0);
+        ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+            if ui.button("Cancel").clicked() {
+                cancel = true;
+            }
+            if ui.button("Apply").clicked() {
+                apply = true;
+            }
+            if ui.add(egui::Button::new("OK").fill(t.accent)).clicked() {
+                ok = true;
+            }
+        });
+    });
+    if ok || apply {
+        app.ui.prefs = draft.clone();
+    }
+    app.ui.dialog = if ok || cancel { None } else { Some(Dialog::Preferences { section, draft }) };
 }

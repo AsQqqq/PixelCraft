@@ -1,13 +1,15 @@
 //! The command registry. Ids follow Aseprite's menus (`file.new`, `edit.undo`,
 //! `sprite.canvasSize`, `layer.new`, `frame.new`) plus primitive editing commands
-//! (`pixel.stroke`, `timeline.setCel`). Command *names* come from the target app; everything
+//! (`draw.stroke`, `draw.shape`, `select.shape`, `timeline.setCel`). Command *names* come from the target app; everything
 //! else (code, wording of help text) is our own.
 
+pub mod draw;
 pub mod edit;
 pub mod file;
 pub mod frame;
 pub mod layer;
 pub mod pixel;
+pub mod select;
 pub mod sprite;
 pub mod timeline;
 
@@ -88,6 +90,8 @@ pub fn command_specs() -> &'static [CommandSpec] {
         v.extend(layer::specs());
         v.extend(frame::specs());
         v.extend(timeline::specs());
+        v.extend(select::specs());
+        v.extend(draw::specs());
         v.extend(pixel::specs());
         v
     })
@@ -123,6 +127,26 @@ pub(crate) fn opt_str<'a>(cmd: &str, p: &'a Json, key: &str) -> Result<Option<&'
         None | Some(Json::Null) => Ok(None),
         Some(v) => v.as_str().map(Some).ok_or_else(|| bad(cmd, format!("`{key}` must be a string"))),
     }
+}
+
+/// A list of `[x, y]` canvas points (missing = empty); anything else is an error. Capped at
+/// 2²⁰ points.
+pub(crate) fn points(cmd: &str, p: &Json, key: &str) -> Result<Vec<pixelcraft_geom::Point>> {
+    let Some(v) = p.get(key) else { return Ok(Vec::new()) };
+    let arr = v.as_array().ok_or_else(|| bad(cmd, format!("`{key}` must be a list of [x, y] points")))?;
+    if arr.len() > 1 << 20 {
+        return Err(bad(cmd, format!("`{key}` has too many points")));
+    }
+    arr.iter()
+        .map(|pt| {
+            let xy = pt.as_array().filter(|a| a.len() == 2);
+            let n = |i: usize| xy.and_then(|a| a.get(i)).and_then(Json::as_i64).and_then(|n| i32::try_from(n).ok());
+            match (n(0), n(1)) {
+                (Some(x), Some(y)) => Ok(pixelcraft_geom::Point::new(x, y)),
+                _ => Err(bad(cmd, format!("`{key}` must be a list of [x, y] whole-number points"))),
+            }
+        })
+        .collect()
 }
 
 pub(crate) fn doc_mut(s: &mut Session) -> Result<&mut Document> {

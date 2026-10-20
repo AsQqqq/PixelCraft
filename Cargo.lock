@@ -2315,7 +2315,7 @@ dependencies = [
 
 [[package]]
 name = "pixelcraft"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "eframe",
  "egui",
@@ -2326,14 +2326,14 @@ dependencies = [
 
 [[package]]
 name = "pixelcraft-ase"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "thiserror 2.0.21",
 ]
 
 [[package]]
 name = "pixelcraft-cli"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "pixelcraft-engine",
  "pixelcraft-mcp",
@@ -2342,14 +2342,14 @@ dependencies = [
 
 [[package]]
 name = "pixelcraft-color"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "pixelcraft-compose"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "pixelcraft-color",
  "pixelcraft-doc",
@@ -2359,17 +2359,18 @@ dependencies = [
 
 [[package]]
 name = "pixelcraft-doc"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "pixelcraft-color",
  "pixelcraft-geom",
  "pixelcraft-raster",
  "serde",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
 name = "pixelcraft-engine"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "log",
  "pixelcraft-color",
@@ -2386,14 +2387,14 @@ dependencies = [
 
 [[package]]
 name = "pixelcraft-geom"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "pixelcraft-io"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "pixelcraft-ase",
  "pixelcraft-color",
@@ -2405,7 +2406,7 @@ dependencies = [
 
 [[package]]
 name = "pixelcraft-mcp"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "pixelcraft-engine",
  "serde_json",
@@ -2413,7 +2414,7 @@ dependencies = [
 
 [[package]]
 name = "pixelcraft-paint"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "pixelcraft-color",
  "pixelcraft-geom",
@@ -2422,7 +2423,7 @@ dependencies = [
 
 [[package]]
 name = "pixelcraft-raster"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "pixelcraft-color",
  "pixelcraft-geom",
@@ -2432,7 +2433,7 @@ dependencies = [
 
 [[package]]
 name = "pixelcraft-ui-egui"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "egui",
  "egui-wgpu",
@@ -2445,7 +2446,7 @@ dependencies = [
 
 [[package]]
 name = "pixelcraft-web"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "eframe",
  "egui",
@@ -4026,7 +4027,7 @@ checksum = "e450f9b2ed1dff33c94c12589a87338689467b9c4f5d8a5710bd09a847d2c8a7"
 
 [[package]]
 name = "xtask"
-version = "0.1.0"
+version = "0.1.1"
 
 [[package]]
 name = "zbus"

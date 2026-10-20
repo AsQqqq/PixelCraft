@@ -4,7 +4,7 @@ Every non-code asset in this repository (images, icons, palettes, example files)
 
 **Policy (mandatory):** PixelCraft contains **no Aseprite (Igara Studio) or other vendor iconography, images, skins, themes, fonts, palettes or sample sprites**. Every asset is original work by PixelCraft contributors or third-party material under an open licence (OSI open source, public domain / CC0, or Creative Commons that allows redistribution). Screenshots of Aseprite are never committed. Font files are not added here: shared fonts live in storytold/craft-fonts, an optional build input (`CRAFT_FONTS_DIR`). The one exception is the ArtCraft brand files in `docs/brand/`: ArtCraft trademarks, not open source, used under `docs/brand/LICENSE-brand.txt`.
 
-Generated-in-code art is original and has no file to list: the theme (`crates/ui-egui/src/theme.rs`), the icon set (`crates/ui-egui/src/icons.rs`) and the default palette (`crates/color/src/lib.rs`).
+Generated-in-code art is original and has no file to list: the theme (`crates/ui-egui/src/theme.rs`), the pixel font (`crates/ui-egui/src/pixel_font/`), the pixel icon set (`crates/ui-egui/src/icons.rs`), the pixel cursor (`crates/ui-egui/src/cursor.rs`) and the default palette (`crates/color/src/lib.rs`).
 
 | Asset | Author | Source | Licence | Notes |
 |---|---|---|---|---|

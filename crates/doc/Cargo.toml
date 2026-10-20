@@ -13,3 +13,4 @@ pixelcraft-geom = { workspace = true }
 pixelcraft-color = { workspace = true }
 pixelcraft-raster = { workspace = true }
 serde = { workspace = true }
+thiserror = { workspace = true }

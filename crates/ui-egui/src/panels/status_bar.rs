@@ -6,15 +6,22 @@ use crate::{PixelApp, zoom};
 
 pub fn show(app: &mut PixelApp, ui: &mut egui::Ui, t: &Tokens) {
     let doc = app.active_doc().and_then(|i| app.session.docs.get(i));
-    let left = match (&app.status, doc) {
-        (Some(msg), _) => msg.clone(),
-        (None, Some(d)) => {
-            // The pointer's pixel while over the canvas, else the sprite's name.
+    let left = match (&app.status, doc, app.ui.hover_tool) {
+        (Some(msg), _, _) => msg.clone(),
+        // Over a tool bar button: the tool and its key.
+        (None, Some(_), Some(tool)) => format!("{} Tool    {}", tool.label(), super::shortcut_text(tool.shortcut())),
+        (None, Some(d), None) => {
+            // The pointer's pixel while over the canvas, else the sprite's name; then the sprite
+            // size and, with a selection, its size.
             let lead = app.ui.hover_pixel.map_or(d.name.clone(), |(x, y)| format!("+ {x} {y}"));
-            format!("{lead}    □ {} {}", d.sprite.size.w, d.sprite.size.h)
+            let sel = d.selection.as_ref().map_or(String::new(), |m| {
+                let b = m.bounds();
+                format!("    Selection {} {}", b.w, b.h)
+            });
+            format!("{lead}    □ {} {}{sel}", d.sprite.size.w, d.sprite.size.h)
         }
         // Home or no tabs: the version line, centred like the target app.
-        (None, None) => format!("{} {} by the ArtCraft team", crate::APP_NAME, crate::VERSION),
+        (None, None, _) => format!("{} {} by the ArtCraft team", crate::APP_NAME, crate::VERSION),
     };
     let right = doc.map(|d| {
         let z = app.ui.viewports.get(&d.uid).map_or(1.0, |v| v.zoom);

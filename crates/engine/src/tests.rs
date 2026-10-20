@@ -114,3 +114,84 @@ fn white_background_makes_an_opaque_background_layer() {
     assert_eq!(d.sprite.cel(0, 0).unwrap().image.rgba(geom::Point::new(3, 3), &d.sprite.palette), color::Rgba8::WHITE);
     assert!(s.execute("file.new", &json!({ "background": "plaid" })).is_err());
 }
+
+fn px(s: &Session, x: i32, y: i32) -> color::Rgba8 {
+    let d = s.active().unwrap();
+    d.sprite.cel(d.layer, d.frame).unwrap().image.rgba(geom::Point::new(x, y), &d.sprite.palette)
+}
+
+#[test]
+fn a_whole_stroke_is_one_undo_step() {
+    let mut s = session_with_sprite();
+    s.execute("draw.stroke", &json!({ "points": [[0, 0], [7, 0], [7, 7]], "color": "#ff0000" })).unwrap();
+    assert_eq!(s.active().unwrap().undo.len(), 1);
+    assert_eq!(px(&s, 7, 4), color::Rgba8::opaque(255, 0, 0));
+    s.execute("edit.undo", &json!({})).unwrap();
+    assert_eq!(px(&s, 7, 4), color::Rgba8::TRANSPARENT);
+}
+
+#[test]
+fn painting_stays_inside_the_selection() {
+    let mut s = session_with_sprite();
+    s.execute("select.shape", &json!({ "shape": "rect", "x0": 0, "y0": 0, "x1": 3, "y1": 7 })).unwrap();
+    s.execute("draw.shape", &json!({ "shape": "rect", "x0": 0, "y0": 0, "x1": 7, "y1": 7, "filled": true, "color": "#00ff00" })).unwrap();
+    assert_eq!(px(&s, 3, 3), color::Rgba8::opaque(0, 255, 0));
+    assert_eq!(px(&s, 4, 3), color::Rgba8::TRANSPARENT);
+    s.execute("select.deselect", &json!({})).unwrap();
+    assert!(s.active().unwrap().selection.is_none());
+    s.execute("select.reselect", &json!({})).unwrap();
+    assert!(s.active().unwrap().selection.is_some());
+}
+
+#[test]
+fn selection_modes_and_inverse() {
+    let mut s = session_with_sprite();
+    s.execute("select.shape", &json!({ "shape": "rect", "x0": 0, "y0": 0, "x1": 1, "y1": 1 })).unwrap();
+    let out = s.execute("select.shape", &json!({ "shape": "rect", "x0": 4, "y0": 4, "x1": 5, "y1": 5, "mode": "add" })).unwrap();
+    assert_eq!((out["width"].as_u64(), out["height"].as_u64()), (Some(6), Some(6)));
+    s.execute("select.all", &json!({})).unwrap();
+    s.execute("select.inverse", &json!({})).unwrap();
+    assert!(s.active().unwrap().selection.is_none(), "inverting everything selects nothing");
+    assert!(s.execute("select.shape", &json!({ "shape": "blob" })).is_err());
+}
+
+#[test]
+fn bucket_fills_the_connected_area() {
+    let mut s = session_with_sprite();
+    s.execute("draw.shape", &json!({ "shape": "line", "x0": 4, "y0": 0, "x1": 4, "y1": 7 })).unwrap();
+    s.execute("draw.fill", &json!({ "x": 0, "y": 0, "color": "#0000ff" })).unwrap();
+    assert_eq!(px(&s, 3, 5), color::Rgba8::opaque(0, 0, 255));
+    assert_eq!(px(&s, 5, 5), color::Rgba8::TRANSPARENT);
+}
+
+#[test]
+fn move_shifts_the_selected_pixels_and_the_selection() {
+    let mut s = session_with_sprite();
+    s.execute("draw.stroke", &json!({ "points": [[1, 1]], "color": "#ff0000" })).unwrap();
+    s.execute("select.shape", &json!({ "shape": "rect", "x0": 0, "y0": 0, "x1": 2, "y1": 2 })).unwrap();
+    s.execute("cel.moveContent", &json!({ "dx": 3, "dy": 2 })).unwrap();
+    assert_eq!(px(&s, 4, 3), color::Rgba8::opaque(255, 0, 0));
+    assert_eq!(px(&s, 1, 1), color::Rgba8::TRANSPARENT);
+    assert_eq!(s.active().unwrap().selection.as_ref().unwrap().bounds(), geom::Rect::new(3, 2, 3, 3));
+}
+
+#[test]
+fn drawing_on_a_new_layer_keeps_the_drawing() {
+    let mut s = session_with_sprite();
+    s.execute("layer.new", &json!({})).unwrap();
+    assert_eq!(s.active().unwrap().layer, 1);
+    s.execute("draw.stroke", &json!({ "points": [[2, 2], [5, 2]], "color": "#00ff00" })).unwrap();
+    s.execute("draw.shape", &json!({ "shape": "rect", "x0": 0, "y0": 5, "x1": 3, "y1": 7, "filled": true, "color": "#0000ff" })).unwrap();
+    let d = s.active().unwrap();
+    let cel = d.sprite.cel(1, 0).expect("the new layer has a cel once painted");
+    assert_eq!(cel.image.rgba(geom::Point::new(4, 2), &d.sprite.palette), color::Rgba8::opaque(0, 255, 0));
+    // Layer 1 stays untouched; the composite shows both.
+    assert_eq!(d.sprite.cel(0, 0).unwrap().image.rgba(geom::Point::new(4, 2), &d.sprite.palette), color::Rgba8::TRANSPARENT);
+    let flat = compose::render_frame(&d.sprite, 0).unwrap();
+    assert_eq!(flat.rgba(geom::Point::new(1, 6), &d.sprite.palette), color::Rgba8::opaque(0, 0, 255));
+    // Undo removes the painting, and the bucket works on an empty layer too.
+    s.execute("layer.new", &json!({})).unwrap();
+    s.execute("draw.fill", &json!({ "x": 0, "y": 0, "color": "#ff0000" })).unwrap();
+    let d = s.active().unwrap();
+    assert_eq!(d.sprite.cel(2, 0).unwrap().image.rgba(geom::Point::new(7, 7), &d.sprite.palette), color::Rgba8::opaque(255, 0, 0));
+}

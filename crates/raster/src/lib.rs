@@ -6,6 +6,9 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 #![forbid(unsafe_code)]
 
+pub mod mask;
+
+pub use mask::{Edge, Mask, SelectMode};
 use pixelcraft_color::{ColorMode, Palette, Rgba8};
 use pixelcraft_geom::{Point, Size};
 use serde::{Deserialize, Serialize};

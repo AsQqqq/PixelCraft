@@ -37,13 +37,6 @@ pub fn show(app: &mut PixelApp, ui: &mut egui::Ui, t: &Tokens) {
                             }
                         }
                     }
-                    if menu == "View" {
-                        ui.separator();
-                        if ui.checkbox(&mut app.ui.invert_wheel_zoom, "Invert Wheel Zoom").changed() {
-                            ui.close();
-                        }
-                        any = true;
-                    }
                     if !any {
                         ui.label(egui::RichText::new("Nothing here yet").color(t.text_dim));
                     }

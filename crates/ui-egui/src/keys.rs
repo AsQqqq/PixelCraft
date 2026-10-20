@@ -68,15 +68,26 @@ fn ui_chord(c: Chord) -> Option<UiAction> {
         (true, false, false, Minus) => UiAction::ZoomOut,
         (true, false, false, Num0) => UiAction::Fit,
         (true, false, false, Q) => UiAction::Quit,
+        (true, false, false, Comma | K) => UiAction::Preferences,
         (false, true, false, Z) => UiAction::Center,
         (false, false, false, Tab) => UiAction::ToggleTimeline,
         (false, false, false, X) => UiAction::SwapColors,
         (false, false, false, Enter) => UiAction::TogglePlay,
-        (false, true, false, U) => UiAction::SetTool(Tool::Ellipse),
+        (false, true, false, Enter) => UiAction::TogglePreviewPlay,
+        (false, false, false, F7) => UiAction::TogglePreview,
+        (false, false, false, Minus) => UiAction::BrushSize(-1),
+        (false, _, false, Plus | Equals) => UiAction::BrushSize(1),
         (false, false, false, k) if digit(k).is_some() => UiAction::ZoomPreset(digit(k)?),
-        (false, false, false, k) => UiAction::SetTool(Tool::ALL.into_iter().find(|t| Chord::parse(t.shortcut()) == Some(Chord::plain(k)))?),
         _ => return None,
     })
+}
+
+/// The tool a key selects: the first tool with that key, or — pressed again — the next one
+/// sharing it (U: Rectangle ↔ Filled Rectangle, R: Blur ↔ Jumble…).
+pub fn tool_for(c: Chord, current: Tool) -> Option<Tool> {
+    let matching: Vec<Tool> = Tool::ALL.into_iter().filter(|t| Chord::parse(t.shortcut()) == Some(c)).collect();
+    let next = matching.iter().position(|&t| t == current).and_then(|i| matching.get(i + 1));
+    next.or(matching.first()).copied()
 }
 
 /// The key chords pressed this frame.
@@ -99,9 +110,13 @@ pub fn handle(app: &mut PixelApp, ctx: &egui::Context) {
     }
     let editing = app.active_doc().is_some();
     for chord in pressed(ctx) {
+        if editing && let Some(t) = tool_for(chord, app.ui.tool) {
+            app.act(UiAction::SetTool(t));
+            continue;
+        }
         if let Some(action) = ui_chord(chord) {
             // On Home only the app-level actions apply.
-            if editing || matches!(action, UiAction::NewFile | UiAction::Quit | UiAction::Home) {
+            if editing || matches!(action, UiAction::NewFile | UiAction::Quit | UiAction::Home | UiAction::Preferences) {
                 app.act(action);
             }
             continue;
@@ -135,14 +150,19 @@ mod tests {
     }
 
     #[test]
-    fn tool_keys_and_modifiers_are_exact() {
-        assert_eq!(ui_chord(Chord::plain(Key::B)), Some(UiAction::SetTool(Tool::Pencil)));
-        assert_eq!(ui_chord(Chord::plain(Key::U)), Some(UiAction::SetTool(Tool::Rectangle)));
-        assert_eq!(ui_chord(Chord::shift(Key::U)), Some(UiAction::SetTool(Tool::Ellipse)));
-        assert_eq!(ui_chord(Chord::cmd(Key::B)), None);
+    fn tool_keys_cycle_and_modifiers_are_exact() {
+        assert_eq!(tool_for(Chord::plain(Key::B), Tool::Eraser), Some(Tool::Pencil));
+        assert_eq!(tool_for(Chord::plain(Key::U), Tool::Pencil), Some(Tool::Rectangle));
+        assert_eq!(tool_for(Chord::plain(Key::U), Tool::Rectangle), Some(Tool::FilledRectangle));
+        assert_eq!(tool_for(Chord::plain(Key::U), Tool::FilledRectangle), Some(Tool::Rectangle));
+        assert_eq!(tool_for(Chord::shift(Key::U), Tool::Pencil), Some(Tool::Ellipse));
+        assert_eq!(tool_for(Chord::shift(Key::M), Tool::Pencil), Some(Tool::EllipticalMarquee));
+        assert_eq!(tool_for(Chord::cmd(Key::B), Tool::Pencil), None);
+        assert_eq!(ui_chord(Chord::plain(Key::Minus)), Some(UiAction::BrushSize(-1)));
         assert_eq!(ui_chord(Chord::plain(Key::Num3)), Some(UiAction::ZoomPreset(3)));
         assert_eq!(ui_chord(Chord::cmd(Key::Equals)), Some(UiAction::ZoomIn));
         // Engine shortcuts are not shadowed by tool keys.
         assert_eq!(ui_chord(Chord::shift(Key::N)), None);
+        assert_eq!(tool_for(Chord::shift(Key::N), Tool::Pencil), None);
     }
 }

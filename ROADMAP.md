@@ -2,7 +2,7 @@
 
 **Stage: pre-alpha** · next: alpha (the Aseprite-style interface and `.aseprite` round-trip)
 
-> **Last reviewed:** 2026-10-19 · **Last updated:** 2026-10-19 · **Change:** major (application lifecycle: Home, New Sprite, unsaved-changes warnings) · **Target:** Aseprite
+> **Last reviewed:** 2026-10-19 · **Last updated:** 2026-10-19 · **Change:** minor (0.1.1: OS-level pixel cursors, Preferences, drawing on new layers) · **Target:** Aseprite
 
 PixelCraft aims at full Aseprite parity, and at being better in places: open (MIT/Apache),
 fully scriptable by agents (MCP, control channel, CLI), and on the web. This page is the
@@ -18,8 +18,8 @@ summary. The detail is in:
 
 | Number | Value | Kind |
 |---|---|---|
-| Commands | 16 | measured: `pixelcraft-cli commands` |
-| Tests | 42 | measured: `cargo test --workspace` |
+| Commands | 25 | measured: `pixelcraft-cli commands` |
+| Tests | 75 | measured: `cargo test --workspace` |
 | `.aseprite` support | header only | measured: `crates/ase` |
 
 ## What's next
@@ -33,6 +33,10 @@ summary. The detail is in:
 
 ## Progress log
 
+- **2026-10-20 (0.1.1):** drawing on a new layer works (cels are created on first paint); pixel cursors are real OS cursors (no lag, no leftovers, every window and dialog); Edit ▸ Preferences with native/pixel cursor, cursor scale and wheel direction.
+- **2026-10-20:** fixes: the pixel cursor only takes over in a focused window (no more two cursors); double-click on the tab strip's free space for New Sprite; Preview window plays the animation on its own (▶/■, Shift+Enter), zooms with the wheel, pans, fits.
+- **2026-10-20:** pixel-art look: PixelCraft's own pixel font built into a TrueType font in code, hand-drawn pixel icons, bevelled controls, no anti-aliasing, a pixel cursor drawn over the UI, the "Dusk" palette.
+- **2026-10-20:** the target app's tool bar: twelve groups with pop-out strips and tooltips, 20 of 26 tools working (marquees, lasso, magic wand, pencil, spray, eraser, eyedropper, zoom, hand, move, bucket, line, rectangles, ellipses, contour, polygon), brush size and pixel-perfect, one undo step per stroke or shape, hover brush preview with negative outline and crosshair, marching-ants selections, Preview window, double-click on an empty workspace for New Sprite.
 - **2026-10-19:** application lifecycle as observed in the target app: Home tab at launch, New Sprite dialog (remembered values, background), session-wide sprite numbering, ● for unsaved changes (clean again after undo), Warning on close and quit, window title; wheel zoom direction setting.
 - **2026-10-19:** first interface: measured layout, tabs, colour picker, tool icons, timeline, 25-level zoom around the pointer, panning, layout-independent shortcuts, playback.
 - **2026-10-19:** workspace, layering, engine command model, first window, CLI and MCP tool list.

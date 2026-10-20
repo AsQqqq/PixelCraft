@@ -4,15 +4,17 @@
 
 | Rank | Gap | Area | Notes |
 |---|---|---|---|
-| 1 | Each pencil segment is its own undo step | engine | needs a stroke transaction (begin/commit) so one drag = one undo |
+| 1 | Pixel look, second pass: bevels on every egui widget (menus, text fields, sliders, checkboxes are flat-outlined), pixel scroll bars, Cyrillic and more symbols in the pixel font, a light theme | UI | `theme.rs`, `pixel_font/glyphs.rs` |
 | 2 | No Save / Open: `.aseprite` reads the header only and can't be written; Save is disabled in the unsaved-changes Warning; Recent files/folders stay empty; Recover Files is disabled | files | `crates/ase`, `crates/io`, File menu, Home |
-| 3 | Tools not implemented: Move, Bucket, Line, Rectangle, Ellipse, selection | tools | tool bar shows them; clicking says so |
-| 4 | Brush size, ink types, pixel-perfect have no effect | tools | context bar shows them disabled or inert |
+| 3 | Tools not implemented: Slice, Gradient, Curve, Blur, Jumble, Text; eraser's right button (replace foreground with background); Shift/Ctrl constraints on shapes and lines; magic wand tolerance in the UI | tools | tool bar shows them; clicking says so |
+| 4 | Ink types, opacity, brush shapes other than round, dynamics | tools | context bar |
 | 5 | Timeline: no drag, multi-select, rename, lock toggle, tags, onion skin | UI | `panels/timeline.rs` |
-| 6 | Preview window, scroll bars, pixel grid, tiled mode | UI | |
+| 6 | Scroll bars, pixel grid, tiled mode, symmetry | UI | |
 | 7 | Wheel modifiers: Ctrl = brush size, Ctrl+Shift = frame, Alt = palette index | UI | `panels/canvas.rs` |
 | 8 | No PNG/GIF export | files | |
 | 9 | No control channel or MCP transport | agents | |
 | 10 | Compositor ignores blend modes other than Normal | compose | |
-| 11 | No floating Preview window (the target app opens one with every sprite) | UI | |
+| 11 | Selection changes are not undoable (the target app undoes them) | engine | |
+| 13 | Preferences and UI state are not saved between runs | UI | needs a settings file |
+| 14 | Web build: no custom pixel cursors (eframe's web runner ignores cursor images) | UI | |
 | 12 | Cmd+Q from the macOS app menu: not verified that it reaches the unsaved-changes flow (File ▸ Exit and the window's close button do) | UI | |

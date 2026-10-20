@@ -1,7 +1,8 @@
 //! Renders the whole PixelCraft window offscreen (wgpu, no window) to a PNG.
 //!
 //! `cargo run -p pixelcraft-ui-egui --example snapshot -- [--size 1280x800] [--scale 2] [--home]
-//!  [--cmd 'id={json}']... [--action new|close|quit|closehome]... [--tool zoom] [--zoom 8] out.png`
+//!  [--cmd 'id={json}']... [--action new|close|quit|closehome]... [--tool zoom] [--zoom 8]
+//!  [--pointer x,y] out.png`
 //!
 //! `--home` starts like the app (Home tab, no sprite); `--action` replays lifecycle steps.
 //!
@@ -21,6 +22,7 @@ fn main() {
     let mut out = "snapshot.png".to_string();
     let mut home = false;
     let mut actions: Vec<String> = vec![];
+    let mut pointer: Option<(f32, f32)> = None;
     let mut it = args.iter();
     while let Some(a) = it.next() {
         match a.as_str() {
@@ -31,8 +33,11 @@ fn main() {
             }
             "--scale" => scale = it.next().and_then(|s| s.parse().ok()).unwrap_or(2.0),
             "--cmd" => cmds.extend(it.next().cloned()),
-            "--tool" => tool = it.next().and_then(|s| Tool::ALL.into_iter().find(|t| t.label().eq_ignore_ascii_case(s))),
+            "--tool" => {
+                tool = it.next().and_then(|s| Tool::ALL.into_iter().find(|t| t.label().replace(' ', "").eq_ignore_ascii_case(&s.replace(' ', ""))))
+            }
             "--home" => home = true,
+            "--pointer" => pointer = it.next().and_then(|s| s.split_once(',')).and_then(|(x, y)| Some((x.parse().ok()?, y.parse().ok()?))),
             "--action" => actions.extend(it.next().cloned()),
             "--zoom" => zoom_digit = it.next().and_then(|s| s.parse::<u8>().ok()),
             other => out = other.to_string(),
@@ -72,6 +77,10 @@ fn main() {
     harness.run_steps(4);
     if let Some(d) = zoom_digit {
         harness.state_mut().act(UiAction::ZoomPreset(d));
+        harness.run_steps(2);
+    }
+    if let Some((x, y)) = pointer {
+        harness.input_mut().events.push(egui::Event::PointerMoved(egui::pos2(x, y)));
         harness.run_steps(2);
     }
     let img = harness.render().expect("render");

@@ -20,6 +20,16 @@ use serde::{Deserialize, Serialize};
 pub const MAX_FRAMES: usize = 65_535;
 pub const MAX_LAYERS: usize = 4_096;
 
+#[derive(Debug, thiserror::Error, PartialEq, Eq)]
+pub enum CelError {
+    #[error("there is no layer {0}")]
+    NoLayer(usize),
+    #[error("there is no frame {0}")]
+    NoFrame(usize),
+    #[error(transparent)]
+    Raster(#[from] RasterError),
+}
+
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum BlendMode {
@@ -127,6 +137,22 @@ impl Sprite {
         self.cels.iter_mut().find(|c| c.layer == layer && c.frame == frame)
     }
 
+    /// The cel at (`layer`, `frame`), creating an empty canvas-sized one first if that layer has
+    /// no cel in that frame yet (a new layer starts empty, like the target app's).
+    pub fn cel_or_new(&mut self, layer: usize, frame: usize) -> Result<&mut Cel, CelError> {
+        if layer >= self.layers.len() {
+            return Err(CelError::NoLayer(layer));
+        }
+        if frame >= self.frames.len() {
+            return Err(CelError::NoFrame(frame));
+        }
+        if self.cel(layer, frame).is_none() {
+            let image = Arc::new(Image::new(self.mode, self.size)?);
+            self.cels.push(Cel { layer, frame, position: Point::default(), opacity: 255, image });
+        }
+        self.cels.iter_mut().find(|c| c.layer == layer && c.frame == frame).ok_or(CelError::NoLayer(layer))
+    }
+
     /// Total length of one playback of every frame, in milliseconds.
     pub fn duration_ms(&self) -> u64 {
         self.frames.iter().map(|f| u64::from(f.duration_ms)).sum()
@@ -144,6 +170,20 @@ mod tests {
         assert!(s.cel(0, 0).is_some());
         assert!(s.cel(3, 7).is_none());
         assert_eq!(s.duration_ms(), 100);
+    }
+
+    #[test]
+    fn painting_a_new_layer_creates_its_cel() {
+        let mut s = Sprite::new(Size::new(4, 4), ColorMode::Rgba).unwrap();
+        s.layers.push(Layer::new("Layer 2"));
+        assert!(s.cel(1, 0).is_none());
+        assert!(s.cel_or_new(1, 0).is_ok());
+        assert!(s.cel(1, 0).is_some());
+        assert_eq!(s.cels.len(), 2);
+        assert!(s.cel_or_new(1, 0).is_ok(), "the second call reuses it");
+        assert_eq!(s.cels.len(), 2);
+        assert_eq!(s.cel_or_new(5, 0).err(), Some(CelError::NoLayer(5)));
+        assert_eq!(s.cel_or_new(0, 3).err(), Some(CelError::NoFrame(3)));
     }
 
     #[test]

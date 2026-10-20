@@ -12,9 +12,11 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 #![forbid(unsafe_code)]
 
+pub mod cursor;
 pub mod icons;
 pub mod keys;
 pub mod panels;
+pub mod pixel_font;
 pub mod state;
 pub mod theme;
 pub mod zoom;
@@ -48,19 +50,30 @@ pub enum UiAction {
     TogglePlay,
     SwapColors,
     SetTool(Tool),
+    /// `-` / `+`: brush size down or up by this many pixels.
+    BrushSize(i32),
+    /// F7 or the tool bar's bottom button.
+    TogglePreview,
+    /// Shift+Enter or the Preview window's ▶ / ■: play the animation in the Preview window.
+    TogglePreviewPlay,
+    /// Edit ▸ Preferences... (Cmd+, / Cmd+K).
+    Preferences,
 }
 
 impl UiAction {
     /// Menu entries for the UI's own actions: (menu, label, shortcut, action).
     pub const MENU: &'static [(&'static str, &'static str, &'static str, UiAction)] = &[
         ("File", "Exit", "Ctrl+Q", UiAction::Quit),
+        ("Edit", "Preferences...", "Ctrl+,", UiAction::Preferences),
         ("Frame", "Play Animation", "Enter", UiAction::TogglePlay),
+        ("Frame", "Play Preview Animation", "Shift+Enter", UiAction::TogglePreviewPlay),
         ("View", "Zoom In", "Ctrl+=", UiAction::ZoomIn),
         ("View", "Zoom Out", "Ctrl+-", UiAction::ZoomOut),
         ("View", "Zoom 100%", "1", UiAction::ZoomPreset(1)),
         ("View", "Fit on Screen", "Ctrl+0", UiAction::Fit),
         ("View", "Scroll to Center", "Shift+Z", UiAction::Center),
         ("View", "Timeline", "Tab", UiAction::ToggleTimeline),
+        ("View", "Preview", "F7", UiAction::TogglePreview),
         ("View", "Home", "", UiAction::Home),
     ];
 }
@@ -75,9 +88,24 @@ pub struct PixelApp {
     /// Every unsaved sprite was handled: the window may close now.
     pub quit_confirmed: bool,
     canvas: panels::canvas::CanvasCache,
+    preview: panels::preview::PreviewCache,
+    cursors: cursor::Cursors,
     /// Milliseconds spent on the current frame during playback.
     play_ms: f32,
     title: String,
+    /// The pixel font and style are installed (once per context).
+    styled: bool,
+    /// Where interactive spots were drawn last frame (for UI tests and automation).
+    pub hit: HitRects,
+}
+
+/// Screen rectangles of a few controls, recorded as they are drawn.
+#[derive(Clone, Debug, Default)]
+pub struct HitRects {
+    /// The free space after the last tab (double-click: New Sprite).
+    pub tab_free: Option<egui::Rect>,
+    /// The Preview window's play/stop button.
+    pub preview_play: Option<egui::Rect>,
 }
 
 impl Default for PixelApp {
@@ -96,8 +124,12 @@ impl PixelApp {
             quitting: false,
             quit_confirmed: false,
             canvas: panels::canvas::CanvasCache::default(),
+            preview: panels::preview::PreviewCache::default(),
+            cursors: cursor::Cursors::default(),
             play_ms: 0.0,
             title: String::new(),
+            styled: false,
+            hit: HitRects::default(),
         }
     }
 
@@ -218,7 +250,31 @@ impl PixelApp {
                 self.play_ms = 0.0;
             }
             UiAction::SwapColors => std::mem::swap(&mut self.ui.fg, &mut self.ui.bg),
-            UiAction::SetTool(t) => self.ui.tool = t,
+            UiAction::SetTool(t) => {
+                self.ui.tool = t;
+                if let Some(slot) = self.ui.group_tool.get_mut(t.group()) {
+                    *slot = t;
+                }
+            }
+            UiAction::BrushSize(d) => {
+                self.ui.brush_size = (self.ui.brush_size as i32).saturating_add(d).clamp(1, pixelcraft_engine::paint::MAX_BRUSH as i32) as u32;
+            }
+            UiAction::TogglePreview => self.ui.show_preview = !self.ui.show_preview,
+            UiAction::Preferences => {
+                let draft = self.ui.prefs.clone();
+                self.ui.dialog = Some(Dialog::Preferences { section: state::PrefSection::Cursors, draft });
+            }
+            UiAction::TogglePreviewPlay => {
+                let editor_frame = self.active_doc().and_then(|i| self.session.docs.get(i)).map(|d| d.frame);
+                let p = &mut self.ui.preview;
+                p.playing = !p.playing && editor_frame.is_some();
+                p.elapsed_ms = 0.0;
+                // Start from the frame the editor shows; the preview window opens if it was hidden.
+                if p.playing {
+                    p.frame = editor_frame.unwrap_or(0);
+                    self.ui.show_preview = true;
+                }
+            }
         }
     }
 
@@ -264,7 +320,10 @@ impl PixelApp {
     pub fn ui(&mut self, ui: &mut egui::Ui) {
         let ctx = ui.ctx().clone();
         let t = theme::Tokens::get(&ctx);
-        theme::apply(&ctx, &t);
+        if !self.styled {
+            theme::setup(&ctx, &t);
+            self.styled = true;
+        }
         self.handle_close_request(&ctx);
         if self.ui.dialog.is_none() {
             keys::handle(self, &ctx);
@@ -298,7 +357,15 @@ impl PixelApp {
                 panels::home::show(self, ui, &t);
             }
         });
+        if editing && self.ui.show_preview {
+            panels::preview::show(self, &ctx, &t);
+        }
         panels::dialogs::show(self, &ctx, &t);
+        // Last: the cursor the widgets asked for, as a pixel-art OS cursor (or the native one).
+        // macOS sizes cursor images in points; other systems in physical pixels.
+        let density = if cfg!(target_os = "macos") { 1.0 } else { ctx.pixels_per_point() };
+        let scale = (f32::from(self.ui.prefs.cursor_scale.clamp(1, 3)) * theme::size::UI_PX * density).round() as u16;
+        self.cursors.apply(&ctx, !self.ui.prefs.native_cursor, scale.max(1));
     }
 }
 

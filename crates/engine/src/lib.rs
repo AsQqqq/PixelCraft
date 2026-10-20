@@ -19,6 +19,7 @@ pub use pixelcraft_color as color;
 pub use pixelcraft_compose as compose;
 pub use pixelcraft_doc as doc;
 pub use pixelcraft_geom as geom;
+pub use pixelcraft_paint as paint;
 pub use pixelcraft_raster as raster;
 
 use pixelcraft_doc::Sprite;
@@ -62,6 +63,10 @@ pub struct Document {
     /// The undo depth at which the document matches its file (or, never saved, its new state);
     /// `None` once that state can't be reached by undo/redo any more.
     pub saved_at: Option<usize>,
+    /// The selected pixels (canvas-sized), if anything is selected.
+    pub selection: Option<pixelcraft_raster::Mask>,
+    /// The last selection that was deselected, for Select ▸ Reselect.
+    pub last_selection: Option<pixelcraft_raster::Mask>,
 }
 
 impl Document {
@@ -120,6 +125,8 @@ impl Session {
             undo: Vec::new(),
             redo: Vec::new(),
             saved_at: Some(0),
+            selection: None,
+            last_selection: None,
         });
         let i = self.docs.len() - 1;
         self.active = Some(i);
