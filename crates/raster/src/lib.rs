@@ -7,6 +7,7 @@
 #![forbid(unsafe_code)]
 
 pub mod mask;
+pub mod transform;
 
 pub use mask::{Edge, Mask, SelectMode};
 use pixelcraft_color::{ColorMode, Palette, Rgba8};

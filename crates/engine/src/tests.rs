@@ -327,3 +327,82 @@ fn file_open_reads_an_image_into_a_new_tab_and_reuses_an_open_one() {
     assert_eq!(s.docs.len(), 2);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+fn raw_px(s: &Session, layer: usize, frame: usize, x: i32, y: i32) -> Option<Vec<u8>> {
+    let d = s.active().unwrap();
+    d.sprite.cel(layer, frame).and_then(|c| c.image.pixel(geom::Point::new(x, y)).map(<[u8]>::to_vec))
+}
+
+#[test]
+fn copy_and_paste_in_every_colour_mode() {
+    for mode in ["rgba", "grayscale", "indexed"] {
+        let mut s = Session::new();
+        s.execute("file.new", &json!({ "width": 8, "height": 8, "colorMode": mode })).unwrap();
+        s.execute("draw.shape", &json!({ "shape": "rect", "x0": 0, "y0": 0, "x1": 1, "y1": 1, "filled": true, "color": "#ffffff", "index": 5 }))
+            .unwrap();
+        s.execute("select.shape", &json!({ "shape": "rect", "x0": 0, "y0": 0, "x1": 1, "y1": 1 })).unwrap();
+        let out = s.execute("edit.copy", &json!({})).unwrap();
+        assert_eq!((out["width"].as_u64(), out["height"].as_u64()), (Some(2), Some(2)), "{mode}");
+        let before = raw_px(&s, 0, 0, 0, 0);
+        let pasted = s.execute("edit.paste", &json!({ "x": 5, "y": 5 })).unwrap();
+        assert_eq!((pasted["x"].as_i64(), pasted["y"].as_i64()), (Some(5), Some(5)), "{mode}");
+        assert_eq!(raw_px(&s, 0, 0, 6, 6), before, "{mode}: the copy lands at 5,5");
+        let b = s.active().unwrap().selection.as_ref().unwrap().bounds();
+        assert_eq!((b.x, b.y, b.w, b.h), (5, 5, 2, 2), "{mode}: the pasted pixels are selected");
+        s.execute("edit.undo", &json!({})).unwrap();
+        assert_ne!(raw_px(&s, 0, 0, 6, 6), before, "{mode}: one undo step");
+    }
+}
+
+#[test]
+fn cut_copies_then_clears_and_paste_goes_to_the_current_layer_and_frame() {
+    let mut s = session_with_sprite();
+    s.execute("draw.stroke", &json!({ "points": [[2, 2], [3, 2]], "color": "#ff0000" })).unwrap();
+    s.execute("select.shape", &json!({ "shape": "rect", "x0": 2, "y0": 2, "x1": 3, "y1": 2 })).unwrap();
+    s.execute("edit.cut", &json!({})).unwrap();
+    assert_eq!(px(&s, 2, 2), color::Rgba8::TRANSPARENT, "cut clears");
+    assert!(s.clipboard.is_some());
+    // Another layer and another frame: the paste lands there, at the copied spot.
+    s.execute("layer.new", &json!({})).unwrap();
+    s.execute("frame.new", &json!({})).unwrap();
+    s.execute("edit.paste", &json!({})).unwrap();
+    let d = s.active().unwrap();
+    assert_eq!((d.layer, d.frame), (1, 1));
+    assert_eq!(raw_px(&s, 1, 1, 3, 2), Some(vec![255, 0, 0, 255]));
+    assert_eq!(raw_px(&s, 0, 1, 3, 2), Some(vec![0, 0, 0, 0]), "layer 1 untouched");
+}
+
+#[test]
+fn paste_scales_rotates_and_crosses_sprites() {
+    let mut s = session_with_sprite();
+    s.execute("draw.stroke", &json!({ "points": [[0, 0], [1, 0]], "color": "#00ff00" })).unwrap();
+    s.execute("select.shape", &json!({ "shape": "rect", "x0": 0, "y0": 0, "x1": 1, "y1": 0 })).unwrap();
+    s.execute("edit.copy", &json!({})).unwrap();
+    // 2×1 stretched to 4×2.
+    let out = s.execute("edit.paste", &json!({ "x": 0, "y": 4, "width": 4, "height": 2 })).unwrap();
+    assert_eq!((out["width"].as_u64(), out["height"].as_u64()), (Some(4), Some(2)));
+    assert_eq!(px(&s, 3, 5), color::Rgba8::opaque(0, 255, 0));
+    // A quarter turn: 2×1 becomes 1×2.
+    let out = s.execute("edit.paste", &json!({ "x": 6, "y": 0, "angle": 90 })).unwrap();
+    assert_eq!((out["width"].as_u64(), out["height"].as_u64()), (Some(1), Some(2)));
+    // Into a smaller sprite where the copied spot is off the canvas: centred.
+    s.execute("select.shape", &json!({ "shape": "rect", "x0": 6, "y0": 6, "x1": 7, "y1": 7 })).unwrap();
+    s.execute("edit.copy", &json!({})).unwrap();
+    s.execute("file.new", &json!({ "width": 4, "height": 4 })).unwrap();
+    let out = s.execute("edit.paste", &json!({})).unwrap();
+    assert_eq!((out["x"].as_i64(), out["y"].as_i64()), (Some(1), Some(1)));
+}
+
+#[test]
+fn paste_refuses_what_it_cannot_do() {
+    let mut s = session_with_sprite();
+    assert!(s.execute("edit.paste", &json!({})).is_err(), "nothing copied");
+    s.execute("edit.copy", &json!({})).unwrap();
+    for bad in [json!({ "width": 0 }), json!({ "width": 60000, "height": 60000 }), json!({ "angle": "left" }), json!({ "x": "a" })] {
+        assert!(s.execute("edit.paste", &bad).is_err(), "{bad}");
+    }
+    assert!(s.execute("edit.paste", &json!({ "x": -100000, "y": 2147483000 })).is_ok(), "far away is just off the canvas");
+    Arc::make_mut(&mut s.active_mut().unwrap().sprite).layers[0].locked = true;
+    assert!(s.execute("edit.paste", &json!({})).is_err());
+    assert!(s.execute("edit.cut", &json!({})).is_err());
+}

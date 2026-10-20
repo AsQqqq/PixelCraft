@@ -1,7 +1,7 @@
 //! Renders the whole PixelCraft window offscreen (wgpu, no window) to a PNG.
 //!
 //! `cargo run -p pixelcraft-ui-egui --example snapshot -- [--size 1280x800] [--scale 2] [--home]
-//!  [--cmd 'id={json}']... [--action new|close|quit|closehome]... [--tool zoom] [--zoom 8]
+//!  [--cmd 'id={json}']... [--action new|close|quit|closehome|copy|paste|turn]... [--tool zoom] [--zoom 8]
 //!  [--open image.png]... [--pointer x,y] out.png`
 //!
 //! `--home` starts like the app (Home tab, no sprite); `--action` replays lifecycle steps;
@@ -60,6 +60,16 @@ fn main() {
             "new" => app.act(UiAction::NewFile),
             "close" => app.act(UiAction::CloseTab),
             "quit" => app.act(UiAction::Quit),
+            "copy" => app.invoke("edit.copy"),
+            "paste" => app.invoke("edit.paste"),
+            // The floating paste stretched ×2 and turned 30°.
+            "turn" => {
+                if let Some(p) = app.ui.pasting.as_mut() {
+                    p.w *= 2.0;
+                    p.h *= 2.0;
+                    p.angle = 30.0;
+                }
+            }
             "closehome" => {
                 app.act(UiAction::Home);
                 app.act(UiAction::CloseTab);

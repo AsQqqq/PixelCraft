@@ -296,6 +296,9 @@ pub struct UiState {
     pub new_sprite: NewSpriteForm,
     #[serde(skip)]
     pub dialog: Option<Dialog>,
+    /// Edit ▸ Paste floating in its transform box, not applied yet.
+    #[serde(skip)]
+    pub pasting: Option<crate::panels::paste::Pasting>,
 }
 
 impl Default for UiState {
@@ -323,6 +326,7 @@ impl Default for UiState {
             home_active: true,
             new_sprite: NewSpriteForm::default(),
             dialog: None,
+            pasting: None,
         }
     }
 }

@@ -7,6 +7,7 @@ pub mod context_bar;
 pub mod dialogs;
 pub mod home;
 pub mod menu_bar;
+pub mod paste;
 pub mod preview;
 pub mod status_bar;
 pub mod tabs;

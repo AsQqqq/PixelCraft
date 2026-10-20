@@ -97,6 +97,16 @@ pub struct Session {
     next_uid: u64,
     /// Numbers new sprites `Sprite-0001`, `-0002`… for the whole session; never reused.
     next_sprite_number: u32,
+    /// What Edit ▸ Copy / Cut took, for Edit ▸ Paste (shared by every open sprite).
+    pub clipboard: Option<Clip>,
+}
+
+/// Copied pixels: RGBA whatever the source sprite's colour mode (paste converts to the target's),
+/// transparent outside the selection, and where they were on the canvas.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Clip {
+    pub image: pixelcraft_raster::Image,
+    pub origin: pixelcraft_geom::Point,
 }
 
 impl Session {
@@ -145,6 +155,13 @@ impl Session {
             d.path = path;
         }
         Ok(i)
+    }
+
+    /// Where Edit ▸ Paste puts the clipboard on the active sprite by default (top-left).
+    pub fn paste_position(&self) -> Option<pixelcraft_geom::Point> {
+        let clip = self.clipboard.as_ref()?;
+        let size = self.active()?.sprite.size;
+        Some(cmd::edit::paste_position(clip, size, clip.image.size().w, clip.image.size().h))
     }
 
     pub fn next_sprite_name(&mut self) -> String {

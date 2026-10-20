@@ -2,7 +2,7 @@
 
 **Stage: pre-alpha** · next: alpha (the Aseprite-style interface and `.aseprite` round-trip)
 
-> **Last reviewed:** 2026-10-19 · **Last updated:** 2026-10-20 · **Change:** minor (0.1.3-beta: open images by File ▸ Open and drag-and-drop; Edit ▸ Delete; Delete Frame) · **Target:** Aseprite
+> **Last reviewed:** 2026-10-19 · **Last updated:** 2026-10-20 · **Change:** minor (0.1.4-beta: copy, cut and paste with a transform box) · **Target:** Aseprite
 
 PixelCraft aims at full Aseprite parity, and at being better in places: open (MIT/Apache),
 fully scriptable by agents (MCP, control channel, CLI), and on the web. This page is the
@@ -19,8 +19,8 @@ summary. The detail is in:
 
 | Number | Value | Kind |
 |---|---|---|
-| Commands | 28 | measured: `pixelcraft-cli commands` |
-| Tests | 103 | measured: `cargo test --workspace` |
+| Commands | 31 | measured: `pixelcraft-cli commands` |
+| Tests | 118 | measured: `cargo test --workspace` |
 | `.aseprite` support | header only | measured: `crates/ase` |
 
 ## What's next
@@ -34,6 +34,7 @@ summary. The detail is in:
 
 ## Progress log
 
+- **2026-10-20 (0.1.4-beta):** Edit ▸ Copy / Cut / Paste (Cmd/Ctrl+C, X, V; `edit.copy`, `edit.cut`, `edit.paste`): the paste floats in a transform box — move, stretch by eight handles (Shift: proportions), rotate outside the corners (Shift: 15°) — and applies with Enter or a click to the current layer and frame; nearest-neighbour scaling and rotation in `raster::transform`; works in every colour mode; Cmd+V works whatever the system clipboard holds.
 - **2026-10-20 (0.1.3-beta):** Redo also on Cmd/Ctrl+Shift+Z and Cmd/Ctrl+R (as well as Cmd/Ctrl+Y).
 - **2026-10-20 (0.1.3-beta):** clicking a frame number in the timeline selects the frame; Delete/Backspace then delete the frame itself (before, they only cleared its pixels and left an empty frame in the animation).
 - **2026-10-20 (0.1.3-beta):** opening images: File ▸ Open... (Cmd+O, Home link; the OS dialog, the browser's picker on the web) and drag-and-drop open PNG, JPEG, GIF (animated: every frame), BMP, WebP, TGA, ICO, TIFF, PNM and QOI as new tabs (`file.open`); big images open fitted and draw in tiles past the GPU texture limit (fixes a crash risk).

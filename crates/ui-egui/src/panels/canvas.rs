@@ -77,6 +77,12 @@ fn anchor(app: &PixelApp, view: Rect) -> Pos2 {
     app.canvas.pointer.filter(|p| view.contains(*p)).unwrap_or(view.center())
 }
 
+/// The active sprite's rectangle on screen, as last drawn (for tests and automation).
+pub fn sprite_rect(app: &PixelApp) -> Option<Rect> {
+    let (uid, size) = active_size(app)?;
+    Some(app.ui.viewports.get(&uid)?.sprite_rect(app.canvas.view?, size))
+}
+
 pub fn zoom_step(app: &mut PixelApp, inward: bool) {
     let Some(vp) = viewport_mut(app) else { return };
     let z = if inward { zoom::step_in(vp.zoom) } else { zoom::step_out(vp.zoom) };
@@ -323,9 +329,15 @@ pub fn show(app: &mut PixelApp, ui: &mut egui::Ui, t: &Tokens) {
         }
     }
 
+    // A floating paste takes the pointer (and Enter/Escape) until it is applied or dropped.
+    let pasting = app.ui.pasting.is_some();
+    if pasting && !panning && !space {
+        super::paste::interact(app, ui, &resp, view, vp, ssize);
+    }
+
     // Mouse buttons on the canvas.
     let (pressed_l, pressed_r, released) = ui.input(|i| (i.pointer.primary_pressed(), i.pointer.secondary_pressed(), i.pointer.any_released()));
-    let press = (pressed_l || pressed_r) && resp.hovered() && !panning && !space;
+    let press = (pressed_l || pressed_r) && resp.hovered() && !panning && !space && !pasting;
     let secondary = pressed_r && !pressed_l;
     if let (true, Some(p)) = (press, at) {
         match tool {
@@ -439,9 +451,12 @@ pub fn show(app: &mut PixelApp, ui: &mut egui::Ui, t: &Tokens) {
     } else if !app.canvas.poly.is_empty() {
         overlay.poly_preview(app, &app.canvas.poly, at, app.canvas.poly_tool == Some(Tool::PolygonalLasso));
     }
-    let hovering = resp.hovered() && !panning && tool != Tool::Hand && app.canvas.drag.is_none();
+    let hovering = resp.hovered() && !panning && tool != Tool::Hand && app.canvas.drag.is_none() && !pasting;
     if let (true, Some(p)) = (hovering, at) {
         overlay.hover(app, tool, p);
+    }
+    if app.ui.pasting.is_some() {
+        super::paste::draw(app, ui.ctx(), &painter, view, vp, ssize, t);
     }
 }
 

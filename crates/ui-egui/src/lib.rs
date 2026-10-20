@@ -103,6 +103,10 @@ pub struct PixelApp {
     pub can_open_dialog: bool,
     open_requested: bool,
     inbox: open::Inbox,
+    paste_preview: panels::paste::PreviewCache,
+    clip_keys: keys::ClipKeys,
+    /// The clipboard changed: hand the image to the system clipboard too (end of frame).
+    os_copy: bool,
 }
 
 /// Screen rectangles of a few controls, recorded as they are drawn.
@@ -141,6 +145,9 @@ impl PixelApp {
             can_open_dialog: false,
             open_requested: false,
             inbox: open::Inbox::default(),
+            paste_preview: Default::default(),
+            clip_keys: Default::default(),
+            os_copy: false,
         }
     }
 
@@ -175,6 +182,16 @@ impl PixelApp {
             "file.new" => self.act(UiAction::NewFile),
             "file.close" => self.act(UiAction::CloseTab),
             "file.open" => self.request_open(),
+            // Paste floats in a transform box first; Delete or Undo drop a floating paste.
+            "edit.paste" => self.start_paste(),
+            "edit.undo" | "edit.clear" if self.ui.pasting.is_some() => self.cancel_paste(),
+            "edit.copy" | "edit.cut" => {
+                self.apply_paste();
+                let params = if id == "edit.cut" { json!({ "color": self.ui.bg.to_hex() }) } else { json!({}) };
+                if self.run(id, &params).is_some() {
+                    self.os_copy = true;
+                }
+            }
             // With a frame selected in the timeline, Delete deletes that frame; otherwise it clears
             // pixels, and a background layer is cleared to the background colour.
             "edit.clear" => {
@@ -276,6 +293,8 @@ impl PixelApp {
             }
             UiAction::SwapColors => std::mem::swap(&mut self.ui.fg, &mut self.ui.bg),
             UiAction::SetTool(t) => {
+                // Another tool applies a floating paste first.
+                self.apply_paste();
                 self.ui.tool = t;
                 if let Some(slot) = self.ui.group_tool.get_mut(t.group()) {
                     *slot = t;
@@ -388,11 +407,24 @@ impl PixelApp {
         }
         panels::dialogs::show(self, &ctx, &t);
         open::drop_hint(&ctx, &t);
+        if std::mem::take(&mut self.os_copy) {
+            self.copy_to_system_clipboard(&ctx);
+        }
         // Last: the cursor the widgets asked for, as a pixel-art OS cursor (or the native one).
         // macOS sizes cursor images in points; other systems in physical pixels.
         let density = if cfg!(target_os = "macos") { 1.0 } else { ctx.pixels_per_point() };
         let scale = (f32::from(self.ui.prefs.cursor_scale.clamp(1, 3)) * theme::size::UI_PX * density).round() as u16;
         self.cursors.apply(&ctx, !self.ui.prefs.native_cursor, scale.max(1));
+    }
+}
+
+impl PixelApp {
+    /// The copied pixels go to the system clipboard too, so other apps can paste them.
+    fn copy_to_system_clipboard(&self, ctx: &egui::Context) {
+        if let Some(clip) = &self.session.clipboard {
+            let s = clip.image.size();
+            ctx.copy_image(egui::ColorImage::from_rgba_unmultiplied([s.w as usize, s.h as usize], clip.image.bytes()));
+        }
     }
 }
 

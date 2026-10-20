@@ -18,3 +18,5 @@
 | 13 | Preferences and UI state are not saved between runs | UI | needs a settings file |
 | 14 | Web build: no custom pixel cursors (eframe's web runner ignores cursor images) | UI | |
 | 12 | Cmd+Q from the macOS app menu: not verified that it reaches the unsaved-changes flow (File ▸ Exit and the window's close button do) | UI | |
+| 13 | Clipboard: no Copy Merged, Paste Special (as new layer / new sprite), pasting an image copied in another app, RotSprite-quality rotation, flip in the transform box, or rotate/diagonal cursors | edit | `cmd/edit.rs`, `panels/paste.rs` |
+

@@ -369,3 +369,149 @@ fn redo_has_three_keys() {
         assert_eq!((d.undo.len(), d.redo.len()), (1, 0), "{mods:?}+{key:?} redoes");
     }
 }
+
+/// A sprite with a 2×2 red square at 1,1 selected and copied.
+fn copied_square() -> egui_kittest::Harness<'static, PixelApp> {
+    let mut app = PixelApp::with_new_sprite();
+    app.run("draw.shape", &json!({ "shape": "rect", "x0": 1, "y0": 1, "x1": 2, "y1": 2, "filled": true, "color": "#ff0000" }));
+    app.run("select.shape", &json!({ "shape": "rect", "x0": 1, "y0": 1, "x1": 2, "y1": 2 }));
+    let mut h = harness(app);
+    h.run_steps(2);
+    h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::C);
+    h.run_steps(1);
+    assert!(h.state().session.clipboard.is_some(), "Cmd+C copies");
+    h
+}
+
+fn pixel(h: &egui_kittest::Harness<'static, PixelApp>, layer: usize, x: i32, y: i32) -> Option<Vec<u8>> {
+    let d = h.state().session.active().unwrap();
+    d.sprite.cel(layer, d.frame).and_then(|c| c.image.pixel(pixelcraft_engine::geom::Point::new(x, y)).map(<[u8]>::to_vec))
+}
+
+#[test]
+fn paste_floats_moves_by_drag_and_applies_on_enter() {
+    let mut h = copied_square();
+    h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::V);
+    h.run_steps(1);
+    assert_eq!(h.state().ui.pasting.as_ref().map(|p| p.rounded()), Some((1, 1, 2, 2)), "floats where it was copied");
+    // Drag it by 10 sprite pixels to the right.
+    let r = panels::canvas::sprite_rect(h.state()).unwrap();
+    let k = r.width() / 32.0;
+    let from = r.min + egui::vec2(2.0 * k, 2.0 * k);
+    let to = from + egui::vec2(10.0 * k, 0.0);
+    h.event(egui::Event::PointerMoved(from));
+    h.event(egui::Event::PointerButton { pos: from, button: egui::PointerButton::Primary, pressed: true, modifiers: Default::default() });
+    h.run_steps(1);
+    for i in 1..=5 {
+        h.event(egui::Event::PointerMoved(from + (to - from) * (i as f32 / 5.0)));
+        h.run_steps(1);
+    }
+    h.event(egui::Event::PointerButton { pos: to, button: egui::PointerButton::Primary, pressed: false, modifiers: Default::default() });
+    h.run_steps(1);
+    assert_eq!(h.state().ui.pasting.as_ref().map(|p| p.rounded()), Some((11, 1, 2, 2)));
+    assert_eq!(pixel(&h, 0, 11, 1), Some(vec![0, 0, 0, 0]), "nothing applied yet");
+    h.key_press(egui::Key::Enter);
+    h.run_steps(2);
+    assert!(h.state().ui.pasting.is_none());
+    assert!(!h.state().ui.playing, "Enter applied the paste instead of playing");
+    assert_eq!(pixel(&h, 0, 12, 2), Some(vec![255, 0, 0, 255]));
+    assert_eq!(pixel(&h, 0, 1, 1), Some(vec![255, 0, 0, 255]), "copy leaves the original");
+}
+
+#[test]
+fn escape_drops_the_paste_and_cut_clears() {
+    let mut h = copied_square();
+    let steps = h.state().session.active().unwrap().undo.len();
+    h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::V);
+    h.run_steps(1);
+    h.key_press(egui::Key::Escape);
+    h.run_steps(1);
+    assert!(h.state().ui.pasting.is_none());
+    assert_eq!(h.state().session.active().unwrap().undo.len(), steps, "nothing pasted");
+    h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::X);
+    h.run_steps(1);
+    assert_eq!(pixel(&h, 0, 1, 1), Some(vec![0, 0, 0, 0]), "Cmd+X cuts");
+}
+
+#[test]
+fn paste_lands_on_the_layer_and_frame_chosen_while_it_floats() {
+    let mut h = copied_square();
+    h.state_mut().run("layer.new", &json!({}));
+    h.state_mut().run("frame.new", &json!({}));
+    h.state_mut().run("timeline.setCel", &json!({ "layer": 0, "frame": 0 }));
+    h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::V);
+    h.run_steps(1);
+    // Choose layer 2, frame 2 while it floats, then apply.
+    h.state_mut().run("timeline.setCel", &json!({ "layer": 1, "frame": 1 }));
+    h.state_mut().ui.pasting.as_mut().unwrap().x = 20.0;
+    h.key_press(egui::Key::Enter);
+    h.run_steps(2);
+    let d = h.state().session.active().unwrap();
+    let red = |l, f, x, y| d.sprite.cel(l, f).and_then(|c| c.image.pixel(pixelcraft_engine::geom::Point::new(x, y)).map(|p| p[0] == 255));
+    assert_eq!(red(1, 1, 20, 1), Some(true));
+    assert_ne!(red(0, 0, 20, 1), Some(true));
+}
+
+#[test]
+fn a_swallowed_cmd_v_pastes_on_release_and_a_paste_event_only_once() {
+    let mut h = copied_square();
+    // egui-winit with an image (no text) on the system clipboard: no press, only V's release.
+    h.event(egui::Event::Key { key: egui::Key::V, physical_key: None, pressed: false, repeat: false, modifiers: egui::Modifiers::COMMAND });
+    h.run_steps(1);
+    assert!(h.state().ui.pasting.is_some(), "the release pasted");
+    h.key_press(egui::Key::Escape);
+    h.run_steps(1);
+    // With text on the clipboard: a Paste event, then V's release — one paste.
+    h.event(egui::Event::Paste("hello".into()));
+    h.run_steps(1);
+    assert!(h.state().ui.pasting.is_some());
+    h.key_press(egui::Key::Escape);
+    h.run_steps(1);
+    h.event(egui::Event::Key { key: egui::Key::V, physical_key: None, pressed: false, repeat: false, modifiers: egui::Modifiers::COMMAND });
+    h.run_steps(1);
+    assert!(h.state().ui.pasting.is_none(), "its release isn't a second paste");
+    // V alone is the Move tool, not a paste.
+    h.key_press(egui::Key::V);
+    h.run_steps(1);
+    assert!(h.state().ui.pasting.is_none());
+    assert_eq!(h.state().ui.tool, Tool::Move);
+}
+
+fn drag(h: &mut egui_kittest::Harness<'static, PixelApp>, from: egui::Pos2, to: egui::Pos2, modifiers: egui::Modifiers) {
+    h.event(egui::Event::ModifiersChanged(modifiers));
+    h.event(egui::Event::PointerMoved(from));
+    h.event(egui::Event::PointerButton { pos: from, button: egui::PointerButton::Primary, pressed: true, modifiers });
+    h.run_steps(1);
+    for i in 1..=6 {
+        h.event(egui::Event::PointerMoved(from + (to - from) * (i as f32 / 6.0)));
+        h.run_steps(1);
+    }
+    h.event(egui::Event::PointerButton { pos: to, button: egui::PointerButton::Primary, pressed: false, modifiers });
+    h.run_steps(1);
+    h.event(egui::Event::ModifiersChanged(Default::default()));
+    h.run_steps(1);
+}
+
+#[test]
+fn the_handles_stretch_and_the_corners_rotate() {
+    let mut h = copied_square();
+    h.state_mut().act(UiAction::ZoomPreset(4));
+    h.run_steps(2);
+    h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::V);
+    h.run_steps(1);
+    let r = panels::canvas::sprite_rect(h.state()).unwrap();
+    let k = r.width() / 32.0;
+    let at = |x: f32, y: f32| r.min + egui::vec2(x * k, y * k);
+    // The bottom-right handle (3,3) out to (7,5): 6×4, the top-left corner stays.
+    drag(&mut h, at(3.0, 3.0), at(7.0, 5.0), Default::default());
+    assert_eq!(h.state().ui.pasting.as_ref().map(|p| p.rounded()), Some((1, 1, 6, 4)));
+    // Just outside the top-right corner (7,1), swung down around the centre (4,3), Shift: 15° steps.
+    let shift = egui::Modifiers { shift: true, ..Default::default() };
+    drag(&mut h, at(8.5, -0.5), at(8.0, 5.5), shift);
+    let angle = h.state().ui.pasting.as_ref().map(|p| p.angle).unwrap();
+    assert!(angle > 30.0 && angle < 120.0 && (angle % 15.0).abs() < 0.01, "turned clockwise in 15° steps: {angle}");
+    h.key_press(egui::Key::Enter);
+    h.run_steps(2);
+    assert!(h.state().ui.pasting.is_none());
+    assert!(h.state().session.active().unwrap().selection.as_ref().is_some_and(|m| m.bounds().w > 4), "the turned paste is selected");
+}

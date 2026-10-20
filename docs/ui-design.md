@@ -87,6 +87,27 @@ As observed in the target app (`plan/aseprite/tools.md`):
 
 Not implemented yet (the buttons say so): Slice, Gradient, Curve, Blur, Jumble, Text.
 
+## Copy, cut and paste
+
+As in the target app: Edit ▸ Copy (Cmd/Ctrl+C) and Cut (Cmd/Ctrl+X) take the selected pixels of
+the current cel (the whole canvas without a selection); the image also goes to the system
+clipboard. Edit ▸ Paste (Cmd/Ctrl+V) floats the copy in a **transform box** (`panels/paste.rs`)
+where it was copied (centred when that is off the canvas):
+
+| Do | Result |
+|---|---|
+| drag inside the box | move it, whole pixels |
+| drag one of the 8 handles | stretch it from the opposite side (Shift keeps the proportions) |
+| drag just outside a corner | rotate it about its centre (Shift: 15° steps) |
+| Enter, Apply, a click elsewhere, another tool | apply it to the layer and frame that are current then (switch layer or frame first to paste there); the pasted pixels become the selection |
+| Escape, Cancel, Delete, Undo | drop it |
+
+The context bar shows the box (`x, y  w×h  angle°`) with Apply and Cancel. Scaling and rotation
+are nearest-neighbour (`raster::transform`), so pixel art stays crisp and quarter turns are
+lossless. The clipboard is shared by every open sprite; pasting converts to the target's colour
+mode (indexed: the nearest palette entry). Pasting an image copied in another app is not
+supported yet.
+
 ## Preferences
 
 Edit ▸ Preferences... (Cmd+, or Cmd+K, like the target app): sections on the left, options on the
@@ -129,6 +150,7 @@ under any keyboard layout. Engine commands bind through their `shortcut` field; 
 | B E I Z H V G L U, Shift+U | Pencil, Eraser, Eyedropper, Zoom, Hand, Move, Bucket, Line, Rectangle, Ellipse |
 | Alt (hold) | eyedropper |
 | Delete, Backspace | with a frame selected in the timeline (its number clicked): Delete Frame; otherwise Edit ▸ Delete: clear the selected pixels (transparent; background colour on a background layer), or the whole cel with nothing selected; the selection stays |
+| Cmd/Ctrl+C, X, V | copy, cut, paste (the paste floats in a transform box: Enter applies, Esc drops) |
 | Cmd/Ctrl+Z; Cmd/Ctrl+Y, Cmd/Ctrl+Shift+Z, Cmd/Ctrl+R | undo; redo |
 | X | swap foreground and background |
 | Tab | show/hide the timeline |

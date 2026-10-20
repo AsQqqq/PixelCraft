@@ -2439,7 +2439,7 @@ dependencies = [
 
 [[package]]
 name = "pixelcraft"
-version = "0.1.3-beta"
+version = "0.1.4-beta"
 dependencies = [
  "eframe",
  "egui",
@@ -2452,14 +2452,14 @@ dependencies = [
 
 [[package]]
 name = "pixelcraft-ase"
-version = "0.1.3-beta"
+version = "0.1.4-beta"
 dependencies = [
  "thiserror 2.0.21",
 ]
 
 [[package]]
 name = "pixelcraft-cli"
-version = "0.1.3-beta"
+version = "0.1.4-beta"
 dependencies = [
  "pixelcraft-engine",
  "pixelcraft-mcp",
@@ -2468,14 +2468,14 @@ dependencies = [
 
 [[package]]
 name = "pixelcraft-color"
-version = "0.1.3-beta"
+version = "0.1.4-beta"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "pixelcraft-compose"
-version = "0.1.3-beta"
+version = "0.1.4-beta"
 dependencies = [
  "pixelcraft-color",
  "pixelcraft-doc",
@@ -2485,7 +2485,7 @@ dependencies = [
 
 [[package]]
 name = "pixelcraft-doc"
-version = "0.1.3-beta"
+version = "0.1.4-beta"
 dependencies = [
  "pixelcraft-color",
  "pixelcraft-geom",
@@ -2496,7 +2496,7 @@ dependencies = [
 
 [[package]]
 name = "pixelcraft-engine"
-version = "0.1.3-beta"
+version = "0.1.4-beta"
 dependencies = [
  "image",
  "log",
@@ -2514,14 +2514,14 @@ dependencies = [
 
 [[package]]
 name = "pixelcraft-geom"
-version = "0.1.3-beta"
+version = "0.1.4-beta"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "pixelcraft-io"
-version = "0.1.3-beta"
+version = "0.1.4-beta"
 dependencies = [
  "image",
  "pixelcraft-ase",
@@ -2534,7 +2534,7 @@ dependencies = [
 
 [[package]]
 name = "pixelcraft-mcp"
-version = "0.1.3-beta"
+version = "0.1.4-beta"
 dependencies = [
  "pixelcraft-engine",
  "serde_json",
@@ -2542,7 +2542,7 @@ dependencies = [
 
 [[package]]
 name = "pixelcraft-paint"
-version = "0.1.3-beta"
+version = "0.1.4-beta"
 dependencies = [
  "pixelcraft-color",
  "pixelcraft-geom",
@@ -2551,7 +2551,7 @@ dependencies = [
 
 [[package]]
 name = "pixelcraft-raster"
-version = "0.1.3-beta"
+version = "0.1.4-beta"
 dependencies = [
  "pixelcraft-color",
  "pixelcraft-geom",
@@ -2561,7 +2561,7 @@ dependencies = [
 
 [[package]]
 name = "pixelcraft-ui-egui"
-version = "0.1.3-beta"
+version = "0.1.4-beta"
 dependencies = [
  "egui",
  "egui-wgpu",
@@ -2576,7 +2576,7 @@ dependencies = [
 
 [[package]]
 name = "pixelcraft-web"
-version = "0.1.3-beta"
+version = "0.1.4-beta"
 dependencies = [
  "eframe",
  "egui",
@@ -4420,7 +4420,7 @@ checksum = "ec7a2a501ed189703dba8b08142f057e887dfc4b2cc4db2d343ac6376ba3e0b9"
 
 [[package]]
 name = "xtask"
-version = "0.1.3-beta"
+version = "0.1.4-beta"
 dependencies = [
  "resvg",
 ]

@@ -13,12 +13,32 @@ fn brush_size(app: &mut PixelApp, ui: &mut egui::Ui) {
     app.ui.brush_size = s;
 }
 
+/// While a paste floats: its size and turn, how to handle the box, Apply and Cancel.
+fn paste_options(app: &mut PixelApp, ui: &mut egui::Ui, p: &crate::panels::paste::Pasting, t: &Tokens) {
+    let (x, y, w, h) = p.rounded();
+    ui.label(egui::RichText::new("Paste").strong());
+    ui.separator();
+    ui.label(format!("{x}, {y}  {w}×{h}  {:.0}°", p.angle));
+    ui.separator();
+    if ui.button("Apply").on_hover_text("Enter").clicked() {
+        app.apply_paste();
+    }
+    if ui.button("Cancel").on_hover_text("Esc").clicked() {
+        app.cancel_paste();
+    }
+    ui.label(egui::RichText::new("Drag: move · handles: size (Shift: ratio) · outside a corner: rotate (Shift: 15°)").color(t.text_dim));
+}
+
 pub fn show(app: &mut PixelApp, ui: &mut egui::Ui, t: &Tokens) {
     egui::Panel::top("context_bar")
         .exact_size(size::CONTEXT_BAR_H)
         .frame(egui::Frame::NONE.fill(t.panel).inner_margin(egui::Margin::symmetric(8, 4)))
         .show(ui, |ui| {
             ui.horizontal_centered(|ui| {
+                if let Some(p) = app.ui.pasting.clone() {
+                    paste_options(app, ui, &p, t);
+                    return;
+                }
                 ui.label(egui::RichText::new(app.ui.tool.label()).strong());
                 ui.separator();
                 match app.ui.tool {
