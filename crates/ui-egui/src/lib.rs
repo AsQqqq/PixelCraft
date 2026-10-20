@@ -163,6 +163,11 @@ impl PixelApp {
         match id {
             "file.new" => self.act(UiAction::NewFile),
             "file.close" => self.act(UiAction::CloseTab),
+            // A background layer is cleared to the background colour.
+            "edit.clear" => {
+                let color = self.ui.bg.to_hex();
+                self.run(id, &json!({ "color": color }));
+            }
             _ => {
                 self.run(id, &json!({}));
             }

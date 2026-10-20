@@ -196,3 +196,20 @@ fn new_sprite_dialog_keeps_the_pixel_cursor() {
     h.run_steps(3);
     assert!(h.output().platform_output.cursor_image.is_some());
 }
+
+#[test]
+fn backspace_and_delete_clear_the_selection() {
+    for key in [egui::Key::Backspace, egui::Key::Delete] {
+        let mut app = PixelApp::with_new_sprite();
+        app.run("draw.shape", &json!({ "shape": "rect", "x0": 0, "y0": 0, "x1": 9, "y1": 9, "filled": true, "color": "#ff0000" }));
+        app.run("select.shape", &json!({ "shape": "rect", "x0": 2, "y0": 2, "x1": 4, "y1": 4 }));
+        let mut h = harness(app);
+        h.run_steps(2);
+        h.key_press(key);
+        h.run_steps(2);
+        let d = h.state().session.active().unwrap();
+        let at = |x, y| d.sprite.cel(0, 0).unwrap().image.rgba(pixelcraft_engine::geom::Point::new(x, y), &d.sprite.palette);
+        assert_eq!(at(3, 3).a, 0, "{key:?} clears inside the selection");
+        assert_eq!(at(6, 6).a, 255, "{key:?} keeps the rest");
+    }
+}

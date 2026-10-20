@@ -1,6 +1,6 @@
 # UI design
 
-> **Last updated:** 2026-10-19
+> **Last updated:** 2026-10-20
 
 ![PixelCraft's window: menu bar, tabs, context bar, colour bar with palette and picker, a 32×32 sprite at 1200 %, tool bar, timeline with two layers and three frames, status bar](images/interface.png)
 
@@ -127,6 +127,7 @@ under any keyboard layout. Engine commands bind through their `shortcut` field; 
 |---|---|
 | B E I Z H V G L U, Shift+U | Pencil, Eraser, Eyedropper, Zoom, Hand, Move, Bucket, Line, Rectangle, Ellipse |
 | Alt (hold) | eyedropper |
+| Delete, Backspace | Edit ▸ Delete: clear the selected pixels (transparent; background colour on a background layer), or the whole cel with nothing selected; the selection stays |
 | X | swap foreground and background |
 | Tab | show/hide the timeline |
 | Enter | play/stop |

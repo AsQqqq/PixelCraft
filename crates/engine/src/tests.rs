@@ -195,3 +195,54 @@ fn drawing_on_a_new_layer_keeps_the_drawing() {
     let d = s.active().unwrap();
     assert_eq!(d.sprite.cel(2, 0).unwrap().image.rgba(geom::Point::new(7, 7), &d.sprite.palette), color::Rgba8::opaque(255, 0, 0));
 }
+
+#[test]
+fn delete_clears_the_selected_pixels_in_every_colour_mode() {
+    for mode in ["rgba", "grayscale", "indexed"] {
+        let mut s = Session::new();
+        s.execute("file.new", &json!({ "width": 8, "height": 8, "colorMode": mode })).unwrap();
+        s.execute("draw.shape", &json!({ "shape": "rect", "x0": 0, "y0": 0, "x1": 7, "y1": 7, "filled": true, "color": "#ffffff", "index": 2 }))
+            .unwrap();
+        s.execute("select.shape", &json!({ "shape": "rect", "x0": 2, "y0": 2, "x1": 4, "y1": 4 })).unwrap();
+        let out = s.execute("edit.clear", &json!({})).unwrap();
+        assert_eq!(out["cleared"], 9, "{mode}");
+        let raw = |s: &Session, x, y| {
+            let d = s.active().unwrap();
+            d.sprite.cel(0, 0).unwrap().image.pixel(geom::Point::new(x, y)).unwrap().to_vec()
+        };
+        assert!(raw(&s, 3, 3).iter().all(|&b| b == 0), "{mode}: inside is transparent");
+        assert!(raw(&s, 5, 5).iter().any(|&b| b != 0), "{mode}: outside is kept");
+        assert!(s.active().unwrap().selection.is_some(), "{mode}: the selection stays");
+        // One undo step brings the pixels back.
+        s.execute("edit.undo", &json!({})).unwrap();
+        assert!(raw(&s, 3, 3).iter().any(|&b| b != 0), "{mode}: undo restores");
+    }
+}
+
+#[test]
+fn delete_without_a_selection_removes_the_cel_and_a_background_takes_the_colour() {
+    let mut s = session_with_sprite();
+    s.execute("draw.stroke", &json!({ "points": [[0, 0], [7, 0]], "color": "#ff0000" })).unwrap();
+    s.execute("edit.clear", &json!({})).unwrap();
+    assert!(s.active().unwrap().sprite.cel(0, 0).is_none());
+    // Nothing left to clear: no extra undo step.
+    let steps = s.active().unwrap().undo.len();
+    s.execute("edit.clear", &json!({})).unwrap();
+    assert_eq!(s.active().unwrap().undo.len(), steps);
+
+    let mut s = Session::new();
+    s.execute("file.new", &json!({ "width": 4, "height": 4, "background": "white" })).unwrap();
+    s.execute("select.shape", &json!({ "shape": "rect", "x0": 0, "y0": 0, "x1": 1, "y1": 1 })).unwrap();
+    s.execute("edit.clear", &json!({ "color": "#00ff00" })).unwrap();
+    assert_eq!(px(&s, 1, 1), color::Rgba8::opaque(0, 255, 0));
+    assert_eq!(px(&s, 3, 3), color::Rgba8::WHITE);
+}
+
+#[test]
+fn delete_refuses_a_locked_layer() {
+    let mut s = session_with_sprite();
+    s.execute("draw.stroke", &json!({ "points": [[0, 0]], "color": "#ff0000" })).unwrap();
+    Arc::make_mut(&mut s.active_mut().unwrap().sprite).layers[0].locked = true;
+    assert!(s.execute("edit.clear", &json!({})).is_err());
+    assert_eq!(px(&s, 0, 0), color::Rgba8::opaque(255, 0, 0));
+}

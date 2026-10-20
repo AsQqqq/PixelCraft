@@ -121,6 +121,9 @@ pub fn handle(app: &mut PixelApp, ctx: &egui::Context) {
             }
             continue;
         }
+        // Backspace is Delete's second key (Edit ▸ Delete), like the target app; it is also the key
+        // macOS keyboards label "delete".
+        let chord = if chord == Chord::plain(Key::Backspace) { Chord::plain(Key::Delete) } else { chord };
         let hit = command_specs().iter().find(|c| c.shortcut.and_then(Chord::parse) == Some(chord));
         if let Some(spec) = hit {
             app.invoke(spec.id);
