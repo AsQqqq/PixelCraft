@@ -3,7 +3,7 @@ name = "pixelcraft-io"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "Import and export between PixelCraft sprites and .ase/.aseprite (and later PNG, GIF and sprite sheets)"
+description = "Import and export between PixelCraft sprites and .ase/.aseprite ; PNG, JPEG, GIF, BMP, WebP and other images open as new sprites"
 
 [lints]
 workspace = true
@@ -15,3 +15,4 @@ pixelcraft-raster = { workspace = true }
 pixelcraft-doc = { workspace = true }
 pixelcraft-ase = { workspace = true }
 thiserror = { workspace = true }
+image = { workspace = true }

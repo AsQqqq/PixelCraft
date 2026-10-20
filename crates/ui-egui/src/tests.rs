@@ -227,3 +227,92 @@ fn alt_c_deletes_the_current_frame_but_not_the_last_one() {
     h.run_steps(2);
     assert_eq!(h.state().session.active().unwrap().sprite.frames.len(), 1, "the only frame stays");
 }
+
+/// A file dropped on the window in tests (the window system's own type lives in egui-winit).
+#[derive(Debug)]
+struct DroppedPath(std::path::PathBuf);
+
+impl egui::DroppedFile for DroppedPath {
+    fn path(&self) -> &std::path::Path {
+        &self.0
+    }
+    fn bytes(&self) -> Result<Vec<u8>, String> {
+        std::fs::read(&self.0).map_err(|e| e.to_string())
+    }
+}
+
+fn png_file(name: &str, w: u32, h: u32) -> std::path::PathBuf {
+    let dir = std::env::temp_dir().join(format!("pixelcraft-ui-{}-{name}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join(name);
+    image::RgbaImage::from_pixel(w, h, image::Rgba([0, 128, 255, 255])).save(&path).unwrap();
+    path
+}
+
+fn png_bytes(w: u32, h: u32) -> Vec<u8> {
+    let mut out = std::io::Cursor::new(Vec::new());
+    image::DynamicImage::from(image::RgbaImage::new(w, h)).write_to(&mut out, image::ImageFormat::Png).unwrap();
+    out.into_inner()
+}
+
+#[test]
+fn dropping_an_image_opens_it_in_a_new_tab() {
+    let path = png_file("drop.png", 6, 4);
+    let mut h = harness(PixelApp::default());
+    h.run_steps(2);
+    h.input_mut().dropped_files.push(std::sync::Arc::new(DroppedPath(path.clone())));
+    h.run_steps(2);
+    let app = h.state();
+    assert!(!app.ui.home_active, "the opened sprite's tab is active");
+    let d = app.session.active().unwrap();
+    assert_eq!((d.name.as_str(), d.sprite.size.w, d.sprite.size.h), ("drop.png", 6, 4));
+    assert_eq!(app.window_title(), format!("drop.png - {APP_NAME} v{VERSION}"));
+    let _ = std::fs::remove_dir_all(path.parent().unwrap());
+}
+
+#[test]
+fn file_open_asks_the_host_for_its_dialog() {
+    let mut app = PixelApp::default();
+    app.invoke("file.open");
+    assert!(!app.take_open_request(), "no dialog without a host");
+    assert!(app.status.as_deref().is_some_and(|s| s.contains("drag")), "{:?}", app.status);
+    app.can_open_dialog = true;
+    let mut h = harness(app);
+    h.run_steps(1);
+    h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::O);
+    h.run_steps(1);
+    assert!(h.state_mut().take_open_request(), "Cmd+O asks for the dialog");
+    assert!(!h.state_mut().take_open_request(), "once");
+    // What the dialog picks arrives through the inbox and opens on the next frame.
+    let path = png_file("picked.png", 3, 3);
+    h.state().picked_sender().send(open::Picked::Path(path.to_string_lossy().into_owned())).unwrap();
+    h.run_steps(1);
+    assert_eq!(h.state().session.active().unwrap().name, "picked.png");
+    let _ = std::fs::remove_dir_all(path.parent().unwrap());
+}
+
+#[test]
+fn browser_bytes_open_and_bad_files_only_say_so() {
+    let mut app = PixelApp::default();
+    app.open_picked(open::Picked::Bytes { name: "web.png".into(), bytes: png_bytes(2, 5) });
+    assert_eq!(app.session.active().unwrap().name, "web.png");
+    assert!(app.session.active().unwrap().path.is_none());
+    app.open_picked(open::Picked::Bytes { name: "notes.txt".into(), bytes: b"hello".to_vec() });
+    assert_eq!(app.session.docs.len(), 1);
+    assert!(app.status.as_deref().is_some_and(|s| s.starts_with("notes.txt")), "{:?}", app.status);
+}
+
+#[test]
+fn a_photo_bigger_than_the_editor_opens_fitted() {
+    let mut app = PixelApp::default();
+    app.open_picked(open::Picked::Bytes { name: "photo.png".into(), bytes: png_bytes(3000, 2000) });
+    app.open_picked(open::Picked::Bytes { name: "icon.png".into(), bytes: png_bytes(16, 16) });
+    let ids: Vec<u64> = app.session.docs.iter().map(|d| d.uid).collect();
+    let mut h = harness(app);
+    h.run_steps(2);
+    h.state_mut().session.active = Some(0);
+    h.run_steps(2);
+    let zoom = |h: &egui_kittest::Harness<'static, PixelApp>, i: usize| h.state().ui.viewports.get(&ids[i]).map(|v| v.zoom);
+    assert!(zoom(&h, 0).is_some_and(|z| z < 1.0), "fitted: {:?}", zoom(&h, 0));
+    assert_eq!(zoom(&h, 1), Some(1.0), "a small image stays at 100 %");
+}

@@ -11,7 +11,7 @@
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use egui::{Color32, Event, Modifiers, MouseWheelUnit, PointerButton, Pos2, Rect, Stroke, Vec2, pos2, vec2};
+use egui::{Color32, Event, Modifiers, MouseWheelUnit, PointerButton, Pos2, Rect, Stroke, Vec2, vec2};
 use pixelcraft_engine::color::Rgba8;
 use pixelcraft_engine::compose::render_frame;
 use pixelcraft_engine::doc::Sprite;
@@ -46,7 +46,7 @@ struct Drag {
 pub struct CanvasCache {
     /// The sprite and frame the texture shows; holding the `Arc` keeps its address from being reused.
     key: Option<(Arc<Sprite>, usize)>,
-    texture: Option<egui::TextureHandle>,
+    texture: crate::tiles::Tiles,
     /// The composited frame, for the eyedropper and the negative outline colour.
     image: Option<Image>,
     /// The editor area and the pointer in it, for keyboard zoom.
@@ -70,12 +70,6 @@ fn active_size(app: &PixelApp) -> Option<(u64, Vec2)> {
 pub fn viewport_mut(app: &mut PixelApp) -> Option<&mut Viewport> {
     let (uid, _) = active_size(app)?;
     app.ui.viewports.get_mut(&uid)
-}
-
-/// The current frame's texture and the sprite size, for the Preview window.
-pub fn texture(app: &PixelApp) -> Option<(egui::TextureId, Vec2)> {
-    let (_, size) = active_size(app)?;
-    Some((app.canvas.texture.as_ref()?.id(), size))
 }
 
 /// The point keyboard zoom keeps fixed: the pointer when it is over the editor, else the centre.
@@ -246,21 +240,22 @@ pub fn show(app: &mut PixelApp, ui: &mut egui::Ui, t: &Tokens) {
     let (uid, sprite, frame) = (d.uid, Arc::clone(&d.sprite), d.frame);
     let ssize = vec2(sprite.size.w as f32, sprite.size.h as f32);
 
-    // A new document opens at 100 %, centred, like the target app (Cmd+0 fits it).
-    let mut vp = *app.ui.viewports.entry(uid).or_default();
+    // A new document opens at 100 %, centred, like the target app (Cmd+0 fits it); an opened
+    // image bigger than the editor starts fitted, so all of it shows.
+    let fit_now = app.ui.fit_on_open.remove(&uid);
+    let mut vp = *app.ui.viewports.entry(uid).or_insert_with(|| {
+        let mut v = crate::zoom::Viewport::default();
+        if fit_now && (ssize.x > view.width() || ssize.y > view.height()) {
+            v.fit(view, ssize);
+        }
+        v
+    });
 
     // Re-render only when the sprite or the frame changed.
     let fresh = app.canvas.key.as_ref().is_some_and(|(s, f)| Arc::ptr_eq(s, &sprite) && *f == frame);
     if !fresh && let Ok(img) = render_frame(&sprite, frame) {
-        let px = [img.size().w as usize, img.size().h as usize];
-        let color = egui::ColorImage::from_rgba_unmultiplied(px, img.bytes());
-        // Sharp pixels when zoomed in, filtered when zoomed out.
-        let options = egui::TextureOptions {
-            magnification: egui::TextureFilter::Nearest,
-            minification: egui::TextureFilter::Linear,
-            ..egui::TextureOptions::NEAREST
-        };
-        app.canvas.texture = Some(ui.ctx().load_texture("canvas", color, options));
+        // Sharp pixels when zoomed in, filtered when zoomed out; tiled past the GPU's limit.
+        app.canvas.texture = crate::tiles::Tiles::upload(ui.ctx(), "canvas", &img);
         app.canvas.image = Some(img);
         app.canvas.key = Some((Arc::clone(&sprite), frame));
     }
@@ -427,7 +422,7 @@ pub fn show(app: &mut PixelApp, ui: &mut egui::Ui, t: &Tokens) {
     }
 
     let painter = ui.painter_at(view);
-    paint_canvas(&painter, view, vp, ssize, app.canvas.texture.as_ref(), t);
+    paint_canvas(&painter, view, vp, ssize, &app.canvas.texture, t);
     let overlay =
         Overlay { painter: &painter, view, vp, ssize, image: app.canvas.image.as_ref(), palette: &sprite.palette, t, time: ui.input(|i| i.time) };
     let has_selection = doc_sel.is_some();
@@ -446,7 +441,7 @@ pub fn show(app: &mut PixelApp, ui: &mut egui::Ui, t: &Tokens) {
     }
 }
 
-fn paint_canvas(painter: &egui::Painter, view: Rect, vp: Viewport, ssize: Vec2, texture: Option<&egui::TextureHandle>, t: &Tokens) {
+fn paint_canvas(painter: &egui::Painter, view: Rect, vp: Viewport, ssize: Vec2, texture: &crate::tiles::Tiles, t: &Tokens) {
     painter.rect_filled(view, 0.0, t.canvas_bg);
     let r = vp.sprite_rect(view, ssize);
     let visible = r.intersect(view);
@@ -466,9 +461,7 @@ fn paint_canvas(painter: &egui::Painter, view: Rect, vp: Viewport, ssize: Vec2, 
                 painter.rect_filled(sq, 0.0, c);
             }
         }
-        if let Some(tex) = texture {
-            painter.image(tex.id(), r, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), Color32::WHITE);
-        }
+        texture.paint(&painter.with_clip_rect(view), r);
     }
     painter.rect_stroke(r, 0.0, Stroke::new(1.0, t.canvas_border), egui::StrokeKind::Outside);
 }

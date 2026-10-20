@@ -18,7 +18,7 @@ use crate::{PixelApp, UiAction, zoom};
 #[derive(Default)]
 pub struct PreviewCache {
     key: Option<(Arc<Sprite>, usize)>,
-    texture: Option<egui::TextureHandle>,
+    texture: Option<crate::tiles::Tiles>,
 }
 
 /// Advances preview playback by `dt` seconds: the next frame once the current one's duration
@@ -51,17 +51,10 @@ pub fn show(app: &mut PixelApp, ctx: &egui::Context, t: &Tokens) {
     let frame = if app.ui.preview.playing { app.ui.preview.frame } else { editor_frame };
     let fresh = app.preview.key.as_ref().is_some_and(|(s, f)| Arc::ptr_eq(s, &sprite) && *f == frame);
     if !fresh && let Ok(img) = render_frame(&sprite, frame) {
-        let px = [img.size().w as usize, img.size().h as usize];
-        let color = egui::ColorImage::from_rgba_unmultiplied(px, img.bytes());
-        let options = egui::TextureOptions {
-            magnification: egui::TextureFilter::Nearest,
-            minification: egui::TextureFilter::Linear,
-            ..egui::TextureOptions::NEAREST
-        };
-        app.preview.texture = Some(ctx.load_texture("preview", color, options));
+        app.preview.texture = Some(crate::tiles::Tiles::upload(ctx, "preview", &img));
         app.preview.key = Some((Arc::clone(&sprite), frame));
     }
-    let Some(tex) = app.preview.texture.as_ref().map(egui::TextureHandle::id) else { return };
+    let Some(tiles) = app.preview.texture.take() else { return };
 
     let screen = ctx.content_rect();
     let mut actions = Vec::new();
@@ -128,8 +121,9 @@ pub fn show(app: &mut PixelApp, ctx: &egui::Context, t: &Tokens) {
             let half = Rect::from_min_size(r.min, r.size() / 2.0);
             p.rect_filled(half, 0.0, t.checker_b);
             p.rect_filled(half.translate(r.size() / 2.0), 0.0, t.checker_b);
-            p.image(tex, r, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), egui::Color32::WHITE);
+            tiles.paint(&p, r);
         });
+    app.preview.texture = Some(tiles);
     app.ui.preview = view;
     app.hit.preview_play = play_rect;
     for a in actions {

@@ -1,11 +1,11 @@
 # Gaps: the ranked work list
 
-> **Last updated:** 2026-10-19
+> **Last updated:** 2026-10-20
 
 | Rank | Gap | Area | Notes |
 |---|---|---|---|
 | 1 | Pixel look, second pass: bevels on every egui widget (menus, text fields, sliders, checkboxes are flat-outlined), pixel scroll bars, Cyrillic and more symbols in the pixel font, a light theme | UI | `theme.rs`, `pixel_font/glyphs.rs` |
-| 2 | No Save / Open: `.aseprite` reads the header only and can't be written; Save is disabled in the unsaved-changes Warning; Recent files/folders stay empty; Recover Files is disabled | files | `crates/ase`, `crates/io`, File menu, Home |
+| 2 | No Save, and no `.aseprite` open: images (PNG, JPEG, GIF…) open as new sprites, but `.aseprite` reads the header only and can't be written; Save is disabled in the unsaved-changes Warning; Recent files/folders stay empty; Recover Files is disabled; no import of an image into an open sprite | files | `crates/ase`, `crates/io`, File menu, Home |
 | 3 | Tools not implemented: Slice, Gradient, Curve, Blur, Jumble, Text; eraser's right button (replace foreground with background); Shift/Ctrl constraints on shapes and lines; magic wand tolerance in the UI | tools | tool bar shows them; clicking says so |
 | 4 | Ink types, opacity, brush shapes other than round, dynamics | tools | context bar |
 | 5 | Timeline: no drag, multi-select, rename, lock toggle, tags, onion skin | UI | `panels/timeline.rs` |

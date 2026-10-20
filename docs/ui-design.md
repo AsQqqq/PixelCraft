@@ -53,6 +53,7 @@ As observed in the target app (`plan/aseprite/lifecycle.md`), tested in `crates/
 | Close (Cmd+W, tab ×/●) untouched | closes at once; with no sprite left, back to Home |
 | Close modified | **Warning**: "Saving changes to the sprite "…" before closing?" Save / Don't Save / Cancel |
 | Quit (File ▸ Exit, Cmd+Q, window close) | one Warning per modified sprite ("before quitting?"); Cancel stops the quit; Don't Save on the last one quits |
+| File ▸ Open... (Cmd+O, Home link), or drop files on the window | each image opens in a new tab named after the file (fitted when bigger than the editor); "Drop to open as a new sprite" shows while files are dragged over the window |
 | Close Home | empty workspace with a small Home button; View ▸ Home reopens it |
 
 Save stays disabled in the Warning until `.aseprite` writing lands (`docs/gaps.md`).

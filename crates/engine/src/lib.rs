@@ -19,6 +19,7 @@ pub use pixelcraft_color as color;
 pub use pixelcraft_compose as compose;
 pub use pixelcraft_doc as doc;
 pub use pixelcraft_geom as geom;
+pub use pixelcraft_io as io;
 pub use pixelcraft_paint as paint;
 pub use pixelcraft_raster as raster;
 
@@ -134,6 +135,18 @@ impl Session {
     }
 
     /// The next untitled sprite name, `Sprite-0001` first.
+    /// Opens an image file's `bytes` as a new, active document named `name` (the file name),
+    /// remembering `path` when there is one (a browser drop has none). Not a command because the
+    /// bytes don't travel as JSON; `file.open` reads a path and calls this.
+    pub fn open_image(&mut self, name: &str, path: Option<String>, bytes: &[u8]) -> std::result::Result<usize, pixelcraft_io::IoError> {
+        let sprite = pixelcraft_io::read_image(bytes)?;
+        let i = self.add_document(name, sprite);
+        if let Some(d) = self.docs.get_mut(i) {
+            d.path = path;
+        }
+        Ok(i)
+    }
+
     pub fn next_sprite_name(&mut self) -> String {
         self.next_sprite_number = self.next_sprite_number.saturating_add(1);
         format!("Sprite-{:04}", self.next_sprite_number)

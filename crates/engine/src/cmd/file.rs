@@ -13,6 +13,15 @@ use crate::{Result, Session};
 pub fn specs() -> Vec<CommandSpec> {
     vec![
         cmd!(noundo "file.new", "New...", ["File"], Some("Ctrl+N"), "{width?: 1–65535 = 32, height?: 1–65535 = 32, colorMode?: \"rgba\"|\"grayscale\"|\"indexed\" = \"rgba\", background?: \"transparent\"|\"white\"|\"black\" = \"transparent\"}", always, new_sprite),
+        cmd!(
+            noundo "file.open",
+            "Open...",
+            ["File"],
+            Some("Ctrl+O"),
+            "{path: string} — opens an image (PNG, JPEG, GIF, BMP, WebP, TGA, ICO, TIFF, PNM, QOI) as a new sprite; a file that is already open becomes the active tab",
+            always,
+            open
+        ),
         cmd!(noundo "file.close", "Close", ["File"], Some("Ctrl+W"), "{document?: index = active}", has_doc, close),
     ]
 }
@@ -52,6 +61,20 @@ fn new_sprite(s: &mut Session, p: &Json) -> Result<Json> {
     let name = s.next_sprite_name();
     let index = s.add_document(name.clone(), sprite);
     Ok(json!({ "document": index, "name": name }))
+}
+
+fn open(s: &mut Session, p: &Json) -> Result<Json> {
+    const ID: &str = "file.open";
+    let path = opt_str(ID, p, "path")?.ok_or_else(|| bad(ID, "`path` is required"))?.to_string();
+    if let Some(i) = s.docs.iter().position(|d| d.path.as_deref() == Some(path.as_str())) {
+        s.active = Some(i);
+        return Ok(json!({ "document": i, "name": s.docs.get(i).map(|d| d.name.clone()), "alreadyOpen": true }));
+    }
+    let bytes = std::fs::read(&path).map_err(|e| bad(ID, format!("can't read {path}: {e}")))?;
+    let name = std::path::Path::new(&path).file_name().map_or_else(|| path.clone(), |n| n.to_string_lossy().into_owned());
+    let i = s.open_image(&name, Some(path), &bytes).map_err(|e| bad(ID, e.to_string()))?;
+    let d = s.docs.get(i).ok_or_else(|| bad(ID, "the document went away"))?;
+    Ok(json!({ "document": i, "name": d.name, "width": d.sprite.size.w, "height": d.sprite.size.h, "frames": d.sprite.frames.len() }))
 }
 
 /// Closes a document without asking (the UI asks about unsaved changes before calling this).

@@ -292,3 +292,38 @@ fn delete_frame_shrinks_tags() {
     assert_eq!(tags.len(), 1, "a tag on the removed frame alone goes");
     assert_eq!((tags[0].from, tags[0].to), (1, 2));
 }
+
+#[test]
+fn file_open_reads_an_image_into_a_new_tab_and_reuses_an_open_one() {
+    let dir = std::env::temp_dir().join(format!("pixelcraft-open-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("cat.png");
+    let mut img = image::RgbaImage::new(5, 3);
+    img.put_pixel(4, 2, image::Rgba([255, 0, 0, 255]));
+    img.save(&path).unwrap();
+    let path = path.to_string_lossy().into_owned();
+
+    let mut s = session_with_sprite();
+    let out = s.execute("file.open", &json!({ "path": path })).unwrap();
+    assert_eq!(out["name"], "cat.png");
+    assert_eq!((out["width"].as_u64(), out["height"].as_u64()), (Some(5), Some(3)));
+    let d = s.active().unwrap();
+    assert_eq!(d.name, "cat.png");
+    assert_eq!(d.path.as_deref(), Some(path.as_str()));
+    assert!(!d.is_dirty(), "a file that was just opened has no unsaved changes");
+    assert_eq!(px(&s, 4, 2), color::Rgba8::opaque(255, 0, 0));
+    assert_eq!(s.docs.len(), 2);
+    // Opening it again switches to its tab instead of a second copy.
+    s.active = Some(0);
+    let again = s.execute("file.open", &json!({ "path": path })).unwrap();
+    assert_eq!(again["alreadyOpen"], true);
+    assert_eq!((s.docs.len(), s.active), (2, Some(1)));
+    // Errors, not panics: no path, a missing file, a file that isn't an image.
+    assert!(s.execute("file.open", &json!({})).is_err());
+    assert!(s.execute("file.open", &json!({ "path": dir.join("nope.png").to_string_lossy() })).is_err());
+    let text = dir.join("notes.png");
+    std::fs::write(&text, "hello").unwrap();
+    assert!(s.execute("file.open", &json!({ "path": text.to_string_lossy() })).is_err());
+    assert_eq!(s.docs.len(), 2);
+    let _ = std::fs::remove_dir_all(&dir);
+}

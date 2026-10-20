@@ -2,9 +2,10 @@
 //!
 //! `cargo run -p pixelcraft-ui-egui --example snapshot -- [--size 1280x800] [--scale 2] [--home]
 //!  [--cmd 'id={json}']... [--action new|close|quit|closehome]... [--tool zoom] [--zoom 8]
-//!  [--pointer x,y] out.png`
+//!  [--open image.png]... [--pointer x,y] out.png`
 //!
-//! `--home` starts like the app (Home tab, no sprite); `--action` replays lifecycle steps.
+//! `--home` starts like the app (Home tab, no sprite); `--action` replays lifecycle steps;
+//! `--open` opens an image as File ▸ Open... does.
 //!
 //! Commands run on a new 32×32 sprite before the render, e.g.
 //! `--cmd 'pixel.stroke={"x0":2,"y0":2,"x1":29,"y1":29,"color":"#d24b3c"}'`.
@@ -23,6 +24,7 @@ fn main() {
     let mut home = false;
     let mut actions: Vec<String> = vec![];
     let mut pointer: Option<(f32, f32)> = None;
+    let mut opens: Vec<String> = vec![];
     let mut it = args.iter();
     while let Some(a) = it.next() {
         match a.as_str() {
@@ -39,6 +41,7 @@ fn main() {
             "--home" => home = true,
             "--pointer" => pointer = it.next().and_then(|s| s.split_once(',')).and_then(|(x, y)| Some((x.parse().ok()?, y.parse().ok()?))),
             "--action" => actions.extend(it.next().cloned()),
+            "--open" => opens.extend(it.next().cloned()),
             "--zoom" => zoom_digit = it.next().and_then(|s| s.parse::<u8>().ok()),
             other => out = other.to_string(),
         }
@@ -48,6 +51,9 @@ fn main() {
     for c in &cmds {
         let (id, p) = c.split_once('=').map(|(a, b)| (a, serde_json::from_str(b).unwrap_or(json!({})))).unwrap_or((c.as_str(), json!({})));
         app.run(id, &p);
+    }
+    for path in opens {
+        app.open_picked(pixelcraft_ui_egui::open::Picked::Path(path));
     }
     for a in &actions {
         match a.as_str() {

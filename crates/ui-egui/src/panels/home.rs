@@ -60,7 +60,9 @@ pub fn show(app: &mut PixelApp, ui: &mut egui::Ui, t: &Tokens) {
                 if link(ui, "New File...", true, "") {
                     app.act(UiAction::NewFile);
                 }
-                link(ui, "Open File...", false, "Opening files is not implemented yet");
+                if link(ui, "Open File...", true, "") {
+                    app.request_open();
+                }
                 link(ui, "Recover Files...", false, "File recovery is not implemented yet");
             });
         });

@@ -17,6 +17,10 @@ log = { workspace = true }
 # Decoding the app icon (PNG) for the Home tab.
 image = { workspace = true }
 
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+# Files dropped in the browser are read asynchronously.
+wasm-bindgen-futures = "0.4"
+
 [dev-dependencies]
 egui_kittest = { version = "0.36", features = ["wgpu", "snapshot"] }
 # Hardware texture sampling in snapshots, so nearest-neighbour pixels stay sharp.

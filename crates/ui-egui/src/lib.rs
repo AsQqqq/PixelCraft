@@ -15,10 +15,12 @@
 pub mod cursor;
 pub mod icons;
 pub mod keys;
+pub mod open;
 pub mod panels;
 pub mod pixel_font;
 pub mod state;
 pub mod theme;
+pub mod tiles;
 pub mod zoom;
 
 use pixelcraft_engine::Session;
@@ -97,6 +99,10 @@ pub struct PixelApp {
     styled: bool,
     /// Where interactive spots were drawn last frame (for UI tests and automation).
     pub hit: HitRects,
+    /// The host app can show an Open dialog (`open.rs`).
+    pub can_open_dialog: bool,
+    open_requested: bool,
+    inbox: open::Inbox,
 }
 
 /// Screen rectangles of a few controls, recorded as they are drawn.
@@ -130,6 +136,9 @@ impl PixelApp {
             title: String::new(),
             styled: false,
             hit: HitRects::default(),
+            can_open_dialog: false,
+            open_requested: false,
+            inbox: open::Inbox::default(),
         }
     }
 
@@ -163,6 +172,7 @@ impl PixelApp {
         match id {
             "file.new" => self.act(UiAction::NewFile),
             "file.close" => self.act(UiAction::CloseTab),
+            "file.open" => self.request_open(),
             // A background layer is cleared to the background colour.
             "edit.clear" => {
                 let color = self.ui.bg.to_hex();
@@ -330,6 +340,7 @@ impl PixelApp {
             self.styled = true;
         }
         self.handle_close_request(&ctx);
+        self.open_incoming(&ctx);
         if self.ui.dialog.is_none() {
             keys::handle(self, &ctx);
         }
@@ -366,6 +377,7 @@ impl PixelApp {
             panels::preview::show(self, &ctx, &t);
         }
         panels::dialogs::show(self, &ctx, &t);
+        open::drop_hint(&ctx, &t);
         // Last: the cursor the widgets asked for, as a pixel-art OS cursor (or the native one).
         // macOS sizes cursor images in points; other systems in physical pixels.
         let density = if cfg!(target_os = "macos") { 1.0 } else { ctx.pixels_per_point() };

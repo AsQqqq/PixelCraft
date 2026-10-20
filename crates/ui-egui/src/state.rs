@@ -282,6 +282,9 @@ pub struct UiState {
     /// Zoom and pan per open document (keyed by document uid).
     #[serde(skip)]
     pub viewports: HashMap<u64, Viewport>,
+    /// Documents just opened from a file: their first view fits them when they are bigger
+    /// than the editor (a photo), instead of 100 %.
+    pub fit_on_open: std::collections::HashSet<u64>,
     /// The Home tab: open at launch, closable, reopened by View ▸ Home.
     pub home_open: bool,
     /// Home is the active tab (otherwise the session's active document is).
@@ -310,6 +313,7 @@ impl Default for UiState {
             playing: false,
             hover_pixel: None,
             viewports: HashMap::new(),
+            fit_on_open: Default::default(),
             home_open: true,
             home_active: true,
             new_sprite: NewSpriteForm::default(),

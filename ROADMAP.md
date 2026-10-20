@@ -2,7 +2,7 @@
 
 **Stage: pre-alpha** · next: alpha (the Aseprite-style interface and `.aseprite` round-trip)
 
-> **Last reviewed:** 2026-10-19 · **Last updated:** 2026-10-20 · **Change:** minor (0.1.2-beta: release builds for macOS, Windows, Linux and the web) · **Target:** Aseprite
+> **Last reviewed:** 2026-10-19 · **Last updated:** 2026-10-20 · **Change:** minor (0.1.3-beta: open images by File ▸ Open and drag-and-drop; Edit ▸ Delete; Delete Frame) · **Target:** Aseprite
 
 PixelCraft aims at full Aseprite parity, and at being better in places: open (MIT/Apache),
 fully scriptable by agents (MCP, control channel, CLI), and on the web. This page is the
@@ -19,8 +19,8 @@ summary. The detail is in:
 
 | Number | Value | Kind |
 |---|---|---|
-| Commands | 27 | measured: `pixelcraft-cli commands` |
-| Tests | 90 | measured: `cargo test --workspace` |
+| Commands | 28 | measured: `pixelcraft-cli commands` |
+| Tests | 101 | measured: `cargo test --workspace` |
 | `.aseprite` support | header only | measured: `crates/ase` |
 
 ## What's next
@@ -34,8 +34,9 @@ summary. The detail is in:
 
 ## Progress log
 
-- **2026-10-20 (0.1.2-beta):** Frame ▸ Delete Frame (`frame.remove`, Alt+C, timeline right-click menu): removes the frame and its cels, shrinks tags, one undo step; the only frame stays.
-- **2026-10-20 (0.1.2-beta):** Edit ▸ Delete (`edit.clear`, Delete or Backspace) clears the selected pixels, in every colour mode; the whole cel without a selection; the background colour on a background layer.
+- **2026-10-20 (0.1.3-beta):** opening images: File ▸ Open... (Cmd+O, Home link; the OS dialog, the browser's picker on the web) and drag-and-drop open PNG, JPEG, GIF (animated: every frame), BMP, WebP, TGA, ICO, TIFF, PNM and QOI as new tabs (`file.open`); big images open fitted and draw in tiles past the GPU texture limit (fixes a crash risk).
+- **2026-10-20 (0.1.3-beta):** Frame ▸ Delete Frame (`frame.remove`, Alt+C, timeline right-click menu): removes the frame and its cels, shrinks tags, one undo step; the only frame stays.
+- **2026-10-20 (0.1.3-beta):** Edit ▸ Delete (`edit.clear`, Delete or Backspace) clears the selected pixels, in every colour mode; the whole cel without a selection; the background colour on a background layer.
 - **2026-10-20 (0.1.2-beta):** releases: `cargo xtask version [set]`, `--version` on both binaries, packaging scripts for macOS (universal DMG), Windows (x64/ARM64 portable zip), Linux (AppImage, deb, rpm, tar.gz) and the web (static zip), and a release workflow that builds a draft "PixelCraft v<version>" with SHA256SUMS ([`docs/releasing.md`](docs/releasing.md)).
 - **2026-10-20 (0.1.1):** the app icon (the owner's lizard): master SVG, macOS/Windows/Linux/web renders from `packaging/icons.sh` (pure-Rust renderer in xtask), set on the window, the Windows executable, the web favicon and the Home tab.
 - **2026-10-20 (0.1.1):** drawing on a new layer works (cels are created on first paint); pixel cursors are real OS cursors (no lag, no leftovers, every window and dialog); Edit ▸ Preferences with native/pixel cursor, cursor scale and wheel direction.
