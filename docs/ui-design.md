@@ -45,9 +45,9 @@ As observed in the target app (`plan/aseprite/lifecycle.md`), tested in `crates/
 
 | Step | PixelCraft |
 |---|---|
-| Launch | Home tab only: the app icon, New File..., Open File..., Recover Files..., Recent files and folders (no News pane, by choice); status bar shows the version; title `PixelCraft v0.1.0` |
+| Launch | Home tab only: the app icon, New File..., Open File..., Recover Files..., Recent files and folders (no News pane, by choice); status bar shows the version; title `PixelCraft v<version>` |
 | File ▸ New... (Cmd+N, Home link) | **New Sprite** dialog with the last used values: width/height (width focused and selected), colour mode, background, Advanced Options; Enter = OK, Escape = Cancel |
-| OK | tab `Sprite-0001` (numbers count up for the session, never reused), 100 % zoom centred, title `Sprite-0001 - PixelCraft v0.1.0`; white/black background makes an opaque `Background` layer |
+| OK | tab `Sprite-0001` (numbers count up for the session, never reused), 100 % zoom centred, title `Sprite-0001 - PixelCraft v<version>`; white/black background makes an opaque `Background` layer |
 | Edit the sprite | the tab's × becomes ● (unsaved changes); the title doesn't change |
 | Undo back to the saved point | ● goes back to ×; closing no longer asks |
 | Close (Cmd+W, tab ×/●) untouched | closes at once; with no sprite left, back to Home |

@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=PixelCraft
+GenericName=Pixel Art Editor
+Comment=Draw pixel art and animate sprites
+Exec=pixelcraft
+TryExec=pixelcraft
+Icon=ai.storyteller.pixelcraft
+Terminal=false
+StartupNotify=true
+StartupWMClass=ai.storyteller.pixelcraft
+Categories=Graphics;2DGraphics;RasterGraphics;
+Keywords=pixel;pixel art;sprite;animation;tileset;drawing;paint;

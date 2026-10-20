@@ -278,7 +278,7 @@ impl PixelApp {
         }
     }
 
-    /// The window title: `Sprite-0001 - PixelCraft v0.1.0`, or just the app on Home.
+    /// The window title: `Sprite-0001 - PixelCraft v<version>`, or just the app on Home.
     pub fn window_title(&self) -> String {
         match self.active_doc().and_then(|i| self.session.docs.get(i)) {
             Some(d) => format!("{} - {APP_NAME} v{VERSION}", d.name),

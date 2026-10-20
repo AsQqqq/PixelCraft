@@ -2,7 +2,7 @@
 
 **Stage: pre-alpha** · next: alpha (the Aseprite-style interface and `.aseprite` round-trip)
 
-> **Last reviewed:** 2026-10-19 · **Last updated:** 2026-10-19 · **Change:** minor (0.1.1: OS-level pixel cursors, Preferences, drawing on new layers) · **Target:** Aseprite
+> **Last reviewed:** 2026-10-19 · **Last updated:** 2026-10-20 · **Change:** minor (0.1.2-beta: release builds for macOS, Windows, Linux and the web) · **Target:** Aseprite
 
 PixelCraft aims at full Aseprite parity, and at being better in places: open (MIT/Apache),
 fully scriptable by agents (MCP, control channel, CLI), and on the web. This page is the
@@ -13,13 +13,14 @@ summary. The detail is in:
 - [`docs/architecture.md`](docs/architecture.md): how it is built
 - [`docs/ui-design.md`](docs/ui-design.md): layout, tokens and the look
 - [`docs/file-format-parity.md`](docs/file-format-parity.md): `.aseprite`, PNG, GIF, sprite sheets
+- [`docs/releasing.md`](docs/releasing.md): versions, packaging, the release workflow
 
 ## Headline numbers
 
 | Number | Value | Kind |
 |---|---|---|
 | Commands | 25 | measured: `pixelcraft-cli commands` |
-| Tests | 78 | measured: `cargo test --workspace` |
+| Tests | 83 | measured: `cargo test --workspace` |
 | `.aseprite` support | header only | measured: `crates/ase` |
 
 ## What's next
@@ -33,6 +34,7 @@ summary. The detail is in:
 
 ## Progress log
 
+- **2026-10-20 (0.1.2-beta):** releases: `cargo xtask version [set]`, `--version` on both binaries, packaging scripts for macOS (universal DMG), Windows (x64/ARM64 portable zip), Linux (AppImage, deb, rpm, tar.gz) and the web (static zip), and a release workflow that builds a draft "PixelCraft v<version>" with SHA256SUMS ([`docs/releasing.md`](docs/releasing.md)).
 - **2026-10-20 (0.1.1):** the app icon (the owner's lizard): master SVG, macOS/Windows/Linux/web renders from `packaging/icons.sh` (pure-Rust renderer in xtask), set on the window, the Windows executable, the web favicon and the Home tab.
 - **2026-10-20 (0.1.1):** drawing on a new layer works (cels are created on first paint); pixel cursors are real OS cursors (no lag, no leftovers, every window and dialog); Edit ▸ Preferences with native/pixel cursor, cursor scale and wheel direction.
 - **2026-10-20:** fixes: the pixel cursor only takes over in a focused window (no more two cursors); double-click on the tab strip's free space for New Sprite; Preview window plays the animation on its own (▶/■, Shift+Enter), zooms with the wheel, pans, fits.

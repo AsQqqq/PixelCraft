@@ -85,6 +85,24 @@ cd apps/pixelcraft-web && trunk serve --release     # http://127.0.0.1:8080
 
 You need [trunk](https://trunkrs.dev) and the `wasm32-unknown-unknown` target.
 
+### Download
+
+Builds for macOS, Windows, Linux and the web are on the
+[Releases](https://github.com/AsQqqq/PixelCraft/releases) page; how they are made:
+[`docs/releasing.md`](docs/releasing.md).
+
+## Tests
+
+```sh
+cargo xtask ci                                   # everything CI runs: fmt, clippy, tests, layers, wasm
+cargo test --workspace                           # all tests
+cargo test -p pixelcraft-engine                  # one crate (engine commands, undo, never-crash fuzz)
+cargo test -p pixelcraft-ui-egui                 # UI: lifecycle and clicks driven by egui_kittest
+cargo test -p pixelcraft-ui-egui -- preview      # tests whose name contains "preview"
+```
+
+Every crash fix and every command lands with a test; see `AGENTS.md` ("Never crash").
+
 ## For agents: MCP, CLI and the control channel
 
 ```sh

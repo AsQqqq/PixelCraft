@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- AppStream metadata (software centres, Flathub). Template: package.sh and the Flatpak
+     manifest substitute @VERSION@ and @DATE@ from Cargo.toml and the build date. -->
+<component type="desktop-application">
+  <id>ai.storyteller.pixelcraft</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT OR Apache-2.0</project_license>
+  <name>PixelCraft</name>
+  <summary>Draw pixel art and animate sprites</summary>
+  <developer id="ai.storyteller">
+    <name>Learning Machines LLC</name>
+  </developer>
+  <description>
+    <p>
+      PixelCraft is an open-source, native pixel-art and sprite animation editor. Draw with the
+      pencil, eraser, bucket, lines, rectangles and ellipses, select with marquees, lasso and the
+      magic wand, and work with layers, frames and a live preview.
+    </p>
+    <p>
+      Every action is a command that the included pixelcraft-cli tool and AI agents (over MCP)
+      can run too, so sprites can be built and checked without opening a window.
+    </p>
+  </description>
+  <launchable type="desktop-id">ai.storyteller.pixelcraft.desktop</launchable>
+  <icon type="stock">ai.storyteller.pixelcraft</icon>
+  <!-- Only url types known to appstream 0.15 (Ubuntu 22.04, where CI validates): no vcs-browser. -->
+  <url type="homepage">https://getartcraft.com/apps/pixelcraft</url>
+  <url type="bugtracker">https://github.com/AsQqqq/PixelCraft/issues</url>
+  <url type="help">https://github.com/AsQqqq/PixelCraft</url>
+  <url type="contact">https://discord.gg/artcraft</url>
+  <categories>
+    <category>Graphics</category>
+    <category>2DGraphics</category>
+    <category>RasterGraphics</category>
+  </categories>
+  <keywords>
+    <keyword>pixel art</keyword>
+    <keyword>sprite</keyword>
+    <keyword>animation</keyword>
+    <keyword>drawing</keyword>
+  </keywords>
+  <branding>
+    <color type="primary" scheme_preference="light">#ffd3a1</color>
+    <color type="primary" scheme_preference="dark">#2c2742</color>
+  </branding>
+  <requires>
+    <display_length compare="ge">640</display_length>
+  </requires>
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+  </supports>
+  <provides>
+    <binary>pixelcraft</binary>
+    <binary>pixelcraft-cli</binary>
+  </provides>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="@VERSION@" date="@DATE@"/>
+  </releases>
+</component>

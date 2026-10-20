@@ -1,0 +1,5 @@
+# trunk build --release (packaging/web/package.sh passes the same values on the command line).
+[build]
+target = "index.html"
+# Relative URLs: the site works under any path prefix and inside an <iframe>.
+public_url = "./"

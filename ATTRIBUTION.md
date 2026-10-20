@@ -9,6 +9,7 @@ Generated-in-code art is original and has no file to list: the theme (`crates/ui
 | Asset | Author | Source | Licence | Notes |
 |---|---|---|---|---|
 | `apps/pixelcraft-web/index.html` | PixelCraft contributors | original | MIT OR Apache-2.0 | trunk entry page |
+| `packaging/linux/ai.storyteller.pixelcraft.desktop`, `packaging/linux/ai.storyteller.pixelcraft.metainfo.xml.in`, `packaging/macos/Info.plist.in` | PixelCraft contributors | adapted from the sibling Craft apps' packaging | MIT OR Apache-2.0 | package metadata (text) |
 | `docs/images/interface.png` | PixelCraft contributors | rendered by PixelCraft itself (`--example snapshot`) | MIT OR Apache-2.0 | README and UI design screenshot |
 | `assets/app-icon/pixelcraft.svg` | the PixelCraft project owner | original (drawn in ArtCraft, vectorised) | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon master (lizard) |
 | `assets/app-icon/pixelcraft-1024.png` | the PixelCraft project owner | rendered from `pixelcraft.svg` by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | macOS render |

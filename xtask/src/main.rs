@@ -7,6 +7,7 @@
 #[cfg(feature = "icons")]
 mod icons;
 mod layers;
+mod version;
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode};
@@ -18,6 +19,7 @@ commands:
   ci              fmt --check, clippy -D warnings, test, layers, wasm (stops at the first failure)
   layers          enforce the crate dependency layering (AGENTS.md \"Layering\")
   wasm            cargo check --target wasm32-unknown-unknown for the L0-L6 crates (+ pixelcraft-web)
+  version [set X] print the workspace version, or set it (Cargo.toml + Cargo.lock), e.g. 0.1.2-beta
   icons           render every app icon from assets/app-icon/pixelcraft.svg
                   (cargo run -p xtask --features icons -- icons, or packaging/icons.sh)
 ";
@@ -27,6 +29,7 @@ fn main() -> ExitCode {
     let result = match args.first().map(String::as_str) {
         Some("layers") => layers::run(&root()),
         Some("wasm") => cmd_wasm(),
+        Some("version") => version::run(&root(), &args.iter().skip(1).map(String::as_str).collect::<Vec<_>>()),
         #[cfg(feature = "icons")]
         Some("icons") => icons::run(&root()),
         #[cfg(not(feature = "icons"))]

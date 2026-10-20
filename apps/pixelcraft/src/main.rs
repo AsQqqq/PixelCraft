@@ -1,6 +1,6 @@
 //! PixelCraft desktop app.
 //!
-//! Usage: `pixelcraft [--width <px>] [--height <px>]`
+//! Usage: `pixelcraft [--version]`
 //!
 //! Opens on the Home tab, like the target app. Opening files, the control channel (`--control <port>`)
 //! and native menus follow (`docs/roadmap.md`).
@@ -23,6 +23,10 @@ impl eframe::App for App {
 }
 
 fn main() -> eframe::Result {
+    if std::env::args().skip(1).any(|a| a == "--version" || a == "-V") {
+        println!("pixelcraft {}", env!("CARGO_PKG_VERSION"));
+        return Ok(());
+    }
     let viewport = egui::ViewportBuilder::default()
         .with_title("PixelCraft")
         .with_app_id(APP_ID)

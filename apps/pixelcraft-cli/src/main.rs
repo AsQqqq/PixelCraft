@@ -3,6 +3,7 @@
 //! ```text
 //! pixelcraft-cli commands [--search <text>]     every command: id, label, menu, shortcut, params
 //! pixelcraft-cli run --cmd 'id=<json>' ...      run commands on a new sprite, print each result
+//! pixelcraft-cli version | --version            the version
 //! ```
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
@@ -17,13 +18,18 @@ usage: pixelcraft-cli <command>
 commands:
   commands [--search TEXT]      list every command (id, label, menu, shortcut, params)
   run --cmd 'ID[=JSON]' ...     run commands on a new 32×32 sprite and print each result
+  version                       print the version
 ";
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let result = match args.first().map(String::as_str) {
         Some("commands") => list(args.iter().position(|a| a == "--search").and_then(|i| args.get(i + 1)).map(String::as_str)),
-        Some("run") => run(&args[1..]),
+        Some("run") => run(args.get(1..).unwrap_or_default()),
+        Some("version" | "--version" | "-V") => {
+            println!("pixelcraft-cli {}", env!("CARGO_PKG_VERSION"));
+            Ok(())
+        }
         Some("-h" | "--help" | "help") | None => {
             print!("{USAGE}");
             Ok(())
