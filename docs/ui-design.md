@@ -36,7 +36,7 @@ own look. One module per panel in `crates/ui-egui/src/panels/`; sizes in `theme:
 | Colour bar | `color_bar.rs`, `color_picker.rs` | palette in 5 columns (click = foreground, right click = background, corner mark on the foreground), fg/bg swatches (click or X swaps), saturation/value square, hue and alpha strips, palette index and hex |
 | Tool bar | `tool_bar.rs`, `icons.rs` | one icon button per tool, tooltips with the key |
 | Sprite editor | `canvas.rs` | checkerboard, sprite texture (nearest above 100 %, linear below), 1 pt border |
-| Timeline | `timeline.rs` | first/previous/play/next/last; frame numbers; per layer eye, lock, name and one cell per frame (dot = cel); active row, frame and cel highlighted |
+| Timeline | `timeline.rs` | first/previous/play/next/last; frame numbers; per layer eye, lock, name and one cell per frame (dot = cel); active row, frame and cel highlighted; right click selects and opens New Frame / Delete Frame / New Layer |
 | Status bar | `status_bar.rs` | `+ x y` under the pointer, `□ w h`, `Frame: n/total`, zoom `100.0%`; errors replace the left side |
 
 ## Lifecycle
@@ -133,6 +133,7 @@ under any keyboard layout. Engine commands bind through their `shortcut` field; 
 | Enter | play/stop |
 | Left / Right, Home / End | previous/next, first/last frame (engine) |
 | Up / Down | next/previous layer (engine) |
+| Alt+N, Alt+C | New Frame, Delete Frame (the last frame can't be deleted) |
 
 ## Pixel look
 

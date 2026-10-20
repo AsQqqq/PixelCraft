@@ -246,3 +246,49 @@ fn delete_refuses_a_locked_layer() {
     assert!(s.execute("edit.clear", &json!({})).is_err());
     assert_eq!(px(&s, 0, 0), color::Rgba8::opaque(255, 0, 0));
 }
+
+#[test]
+fn delete_frame_removes_its_cels_and_keeps_the_rest() {
+    let mut s = session_with_sprite();
+    s.execute("draw.stroke", &json!({ "points": [[0, 0]], "color": "#ff0000" })).unwrap();
+    s.execute("frame.new", &json!({})).unwrap();
+    s.execute("draw.stroke", &json!({ "points": [[1, 1]], "color": "#00ff00" })).unwrap();
+    s.execute("frame.new", &json!({})).unwrap();
+    s.execute("draw.stroke", &json!({ "points": [[2, 2]], "color": "#0000ff" })).unwrap();
+    // Frames: 0 red, 1 red+green, 2 red+green+blue; delete the middle one.
+    s.execute("timeline.setCel", &json!({ "frame": 1 })).unwrap();
+    let out = s.execute("frame.remove", &json!({})).unwrap();
+    assert_eq!(out["frames"], 2);
+    let d = s.active().unwrap();
+    assert_eq!(d.frame, 1, "the next frame becomes current");
+    assert_eq!(d.sprite.cels.len(), 2);
+    assert_eq!(px(&s, 2, 2), color::Rgba8::opaque(0, 0, 255), "frame 3 moved to frame 2");
+    // The last frame: the current frame steps back.
+    s.execute("frame.remove", &json!({})).unwrap();
+    assert_eq!(s.active().unwrap().frame, 0);
+    assert_eq!(px(&s, 0, 0), color::Rgba8::opaque(255, 0, 0));
+    // The only frame can't go; undo brings the others back.
+    assert!(s.execute("frame.remove", &json!({})).is_err());
+    assert!(!command_specs().iter().find(|c| c.id == "frame.remove").unwrap().info(&s).enabled);
+    s.execute("edit.undo", &json!({})).unwrap();
+    s.execute("edit.undo", &json!({})).unwrap();
+    assert_eq!(s.active().unwrap().sprite.frames.len(), 3);
+    assert!(s.execute("frame.remove", &json!({ "frame": 9 })).is_err());
+}
+
+#[test]
+fn delete_frame_shrinks_tags() {
+    let mut s = session_with_sprite();
+    for _ in 0..4 {
+        s.execute("frame.new", &json!({})).unwrap();
+    }
+    let sp = Arc::make_mut(&mut s.active_mut().unwrap().sprite);
+    sp.tags = vec![
+        doc::Tag { name: "walk".into(), from: 1, to: 3, direction: Default::default() },
+        doc::Tag { name: "blink".into(), from: 2, to: 2, direction: Default::default() },
+    ];
+    s.execute("frame.remove", &json!({ "frame": 2 })).unwrap();
+    let tags = &s.active().unwrap().sprite.tags;
+    assert_eq!(tags.len(), 1, "a tag on the removed frame alone goes");
+    assert_eq!((tags[0].from, tags[0].to), (1, 2));
+}

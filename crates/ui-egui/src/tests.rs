@@ -213,3 +213,17 @@ fn backspace_and_delete_clear_the_selection() {
         assert_eq!(at(6, 6).a, 255, "{key:?} keeps the rest");
     }
 }
+
+#[test]
+fn alt_c_deletes_the_current_frame_but_not_the_last_one() {
+    let mut app = PixelApp::with_new_sprite();
+    app.run("frame.new", &json!({}));
+    let mut h = harness(app);
+    h.run_steps(2);
+    h.key_press_modifiers(egui::Modifiers::ALT, egui::Key::C);
+    h.run_steps(2);
+    assert_eq!(h.state().session.active().unwrap().sprite.frames.len(), 1);
+    h.key_press_modifiers(egui::Modifiers::ALT, egui::Key::C);
+    h.run_steps(2);
+    assert_eq!(h.state().session.active().unwrap().sprite.frames.len(), 1, "the only frame stays");
+}

@@ -19,8 +19,8 @@ summary. The detail is in:
 
 | Number | Value | Kind |
 |---|---|---|
-| Commands | 26 | measured: `pixelcraft-cli commands` |
-| Tests | 87 | measured: `cargo test --workspace` |
+| Commands | 27 | measured: `pixelcraft-cli commands` |
+| Tests | 90 | measured: `cargo test --workspace` |
 | `.aseprite` support | header only | measured: `crates/ase` |
 
 ## What's next
@@ -34,6 +34,7 @@ summary. The detail is in:
 
 ## Progress log
 
+- **2026-10-20 (0.1.2-beta):** Frame ▸ Delete Frame (`frame.remove`, Alt+C, timeline right-click menu): removes the frame and its cels, shrinks tags, one undo step; the only frame stays.
 - **2026-10-20 (0.1.2-beta):** Edit ▸ Delete (`edit.clear`, Delete or Backspace) clears the selected pixels, in every colour mode; the whole cel without a selection; the background colour on a background layer.
 - **2026-10-20 (0.1.2-beta):** releases: `cargo xtask version [set]`, `--version` on both binaries, packaging scripts for macOS (universal DMG), Windows (x64/ARM64 portable zip), Linux (AppImage, deb, rpm, tar.gz) and the web (static zip), and a release workflow that builds a draft "PixelCraft v<version>" with SHA256SUMS ([`docs/releasing.md`](docs/releasing.md)).
 - **2026-10-20 (0.1.1):** the app icon (the owner's lizard): master SVG, macOS/Windows/Linux/web renders from `packaging/icons.sh` (pure-Rust renderer in xtask), set on the window, the Windows executable, the web favicon and the Home tab.

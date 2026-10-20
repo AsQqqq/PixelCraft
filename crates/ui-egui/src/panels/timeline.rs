@@ -1,6 +1,7 @@
 //! The timeline at the bottom: transport buttons, then a grid of layers (top layer first) against
 //! frames. The left column holds each layer's eye, lock and name; a dot in a cell marks a cel.
-//! Clicks go through engine commands (`timeline.setCel`, `layer.toggleVisible`, `frame.goTo*`).
+//! Clicks go through engine commands (`timeline.setCel`, `layer.toggleVisible`, `frame.goTo*`);
+//! a right click selects the frame and opens a menu with New Frame / Delete Frame / New Layer.
 
 use egui::{Align2, FontId, Pos2, Rect, Sense, Stroke, pos2, vec2};
 use serde_json::json;
@@ -46,6 +47,8 @@ pub fn show(app: &mut PixelApp, ui: &mut egui::Ui, t: &Tokens) {
     let playing = app.ui.playing;
     let mut click = None;
     let mut transport = None;
+    let mut menu_cmd = None;
+    let can_delete = frames > 1;
 
     egui::Panel::bottom("timeline")
         .default_size(size::TIMELINE_H)
@@ -132,11 +135,28 @@ pub fn show(app: &mut PixelApp, ui: &mut egui::Ui, t: &Tokens) {
                 }
                 p.line_segment([pos2(x0, area.min.y), pos2(x0, area.max.y)], Stroke::new(1.0, t.border));
 
-                if resp.clicked()
+                if (resp.clicked() || resp.secondary_clicked())
                     && let Some(pos) = resp.interact_pointer_pos()
                 {
                     click = hit(pos, area, rows.len(), frames);
                 }
+                resp.context_menu(|ui| {
+                    if ui.button("New Frame").clicked() {
+                        menu_cmd = Some("frame.new");
+                    }
+                    let delete = ui.add_enabled(can_delete, egui::Button::new("Delete Frame"));
+                    if delete.clicked() {
+                        menu_cmd = Some("frame.remove");
+                    }
+                    delete.on_disabled_hover_text("A sprite needs at least one frame");
+                    ui.separator();
+                    if ui.button("New Layer").clicked() {
+                        menu_cmd = Some("layer.new");
+                    }
+                    if menu_cmd.is_some() {
+                        ui.close();
+                    }
+                });
             });
         });
 
@@ -161,6 +181,9 @@ pub fn show(app: &mut PixelApp, ui: &mut egui::Ui, t: &Tokens) {
             app.run("timeline.setCel", &json!({ "layer": l, "frame": f }));
         }
         None => {}
+    }
+    if let Some(id) = menu_cmd {
+        app.run(id, &json!({}));
     }
 }
 
