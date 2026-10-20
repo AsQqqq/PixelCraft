@@ -8,7 +8,19 @@ Generated-in-code art is original and has no file to list: the theme (`crates/ui
 
 | Asset | Author | Source | Licence | Notes |
 |---|---|---|---|---|
-| `assets/app-icon/hicolor/scalable/apps/ai.storyteller.pixelcraft.svg` | PixelCraft contributors | original (hand-written SVG) | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | PLACEHOLDER app icon (pixel heart) |
-| `assets/app-icon/LICENSE.txt` | (licence text) | — | — | |
 | `apps/pixelcraft-web/index.html` | PixelCraft contributors | original | MIT OR Apache-2.0 | trunk entry page |
 | `docs/images/interface.png` | PixelCraft contributors | rendered by PixelCraft itself (`--example snapshot`) | MIT OR Apache-2.0 | README and UI design screenshot |
+| `assets/app-icon/pixelcraft.svg` | the PixelCraft project owner | original (drawn in ArtCraft, vectorised) | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | App icon master (lizard) |
+| `assets/app-icon/pixelcraft-1024.png` | the PixelCraft project owner | rendered from `pixelcraft.svg` by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | macOS render |
+| `assets/app-icon/pixelcraft.icns` | the PixelCraft project owner | rendered from `pixelcraft.svg` by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | macOS bundle icon |
+| `assets/app-icon/pixelcraft.ico` | the PixelCraft project owner | rendered from `pixelcraft.svg` by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | Windows executable icon |
+| `assets/app-icon/hicolor/16x16/apps/ai.storyteller.pixelcraft.png` | the PixelCraft project owner | rendered from `pixelcraft.svg` by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | Linux hicolor render |
+| `assets/app-icon/hicolor/24x24/apps/ai.storyteller.pixelcraft.png` | the PixelCraft project owner | rendered from `pixelcraft.svg` by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | Linux hicolor render |
+| `assets/app-icon/hicolor/32x32/apps/ai.storyteller.pixelcraft.png` | the PixelCraft project owner | rendered from `pixelcraft.svg` by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | Linux hicolor render |
+| `assets/app-icon/hicolor/48x48/apps/ai.storyteller.pixelcraft.png` | the PixelCraft project owner | rendered from `pixelcraft.svg` by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | Linux hicolor render |
+| `assets/app-icon/hicolor/64x64/apps/ai.storyteller.pixelcraft.png` | the PixelCraft project owner | rendered from `pixelcraft.svg` by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | Linux hicolor render |
+| `assets/app-icon/hicolor/128x128/apps/ai.storyteller.pixelcraft.png` | the PixelCraft project owner | rendered from `pixelcraft.svg` by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | Linux hicolor render |
+| `assets/app-icon/hicolor/256x256/apps/ai.storyteller.pixelcraft.png` | the PixelCraft project owner | rendered from `pixelcraft.svg` by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | Linux hicolor render |
+| `assets/app-icon/hicolor/512x512/apps/ai.storyteller.pixelcraft.png` | the PixelCraft project owner | rendered from `pixelcraft.svg` by `packaging/icons.sh` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | Linux hicolor render |
+| `assets/app-icon/hicolor/scalable/apps/ai.storyteller.pixelcraft.svg` | the PixelCraft project owner | copy of `pixelcraft.svg` | MIT OR Apache-2.0 (`assets/app-icon/LICENSE.txt`) | Linux scalable icon |
+| `assets/app-icon/README.md`, `assets/app-icon/LICENSE.txt` | PixelCraft contributors | — | — | Icon notes and licence text |

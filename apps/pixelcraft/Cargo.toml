@@ -16,3 +16,7 @@ pixelcraft-ui-egui = { workspace = true }
 eframe = { workspace = true, features = ["default_fonts", "wgpu", "accesskit", "wayland", "x11"] }
 egui = { workspace = true }
 log = { workspace = true }
+
+[build-dependencies]
+# Icon + VERSIONINFO for pixelcraft.exe; build.rs only uses it when the target is Windows.
+winresource = "0.1"

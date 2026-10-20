@@ -1,3 +1,13 @@
-The PixelCraft app icon files in this directory are original work by the PixelCraft contributors,
-licensed under the MIT License or the Apache License, Version 2.0, at your option
-(see LICENSE-MIT and LICENSE-APACHE at the repository root).
+PixelCraft app icon (pixelcraft.svg and every file derived from it in this directory:
+pixelcraft-1024.png, pixelcraft.icns, pixelcraft.ico, hicolor/).
+
+Original artwork made for this project by the project owner: an engraving-style drawing created
+in ArtCraft, then vectorised. No third-party material. Licensed like the rest of PixelCraft,
+under either of
+
+  * Apache License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0)
+  * MIT license (https://opensource.org/licenses/MIT)
+
+at your option.
+
+Regenerate the derived files with packaging/icons.sh.

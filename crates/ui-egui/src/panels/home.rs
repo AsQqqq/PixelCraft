@@ -6,20 +6,28 @@ use egui::{Color32, Rect, RichText, Sense, pos2, vec2};
 use crate::theme::Tokens;
 use crate::{PixelApp, UiAction};
 
-/// The app mark: a small pixel heart drawn in code (the same art as the app icon).
+/// The app icon (rendered from `assets/app-icon/pixelcraft.svg`), as the Home tab's mark.
+const ICON_PNG: &[u8] = include_bytes!("../../../../assets/app-icon/hicolor/64x64/apps/ai.storyteller.pixelcraft.png");
+
 fn mark(ui: &mut egui::Ui, t: &Tokens) {
-    const ROWS: [&str; 9] =
-        ["..##..##..", ".########.", "##########", "##########", ".########.", "..######..", "...####...", "....##....", ".........."];
-    let (r, _) = ui.allocate_exact_size(vec2(40.0, 40.0), Sense::hover());
-    ui.painter().rect_filled(r, 6.0, t.panel_alt);
-    let px = 3.0;
-    let origin = r.center() - vec2(5.0 * px, 4.5 * px);
-    for (y, row) in ROWS.iter().enumerate() {
-        for (x, c) in row.chars().enumerate() {
-            if c == '#' {
-                let p = origin + vec2(x as f32 * px, y as f32 * px);
-                ui.painter().rect_filled(Rect::from_min_size(pos2(p.x, p.y), vec2(px, px)), 0.0, Color32::from_rgb(0xd2, 0x4b, 0x3c));
-            }
+    let side = 48.0;
+    let id = egui::Id::new("app_icon_texture");
+    let tex: Option<egui::TextureHandle> = ui.ctx().data(|d| d.get_temp(id));
+    let tex = tex.or_else(|| {
+        let img = image::load_from_memory_with_format(ICON_PNG, image::ImageFormat::Png).ok()?.to_rgba8();
+        let size = [img.width() as usize, img.height() as usize];
+        let color = egui::ColorImage::from_rgba_unmultiplied(size, img.as_raw());
+        let handle = ui.ctx().load_texture("app_icon", color, egui::TextureOptions::LINEAR);
+        ui.ctx().data_mut(|d| d.insert_temp(id, handle.clone()));
+        Some(handle)
+    });
+    let (r, _) = ui.allocate_exact_size(vec2(side, side), Sense::hover());
+    match tex {
+        Some(tex) => {
+            ui.painter().image(tex.id(), r, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), Color32::WHITE);
+        }
+        None => {
+            ui.painter().rect_filled(r, 6.0, t.accent);
         }
     }
 }

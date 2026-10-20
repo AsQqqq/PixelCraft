@@ -4,6 +4,8 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 #![cfg_attr(test, allow(clippy::unwrap_used, clippy::expect_used, clippy::panic))]
 
+#[cfg(feature = "icons")]
+mod icons;
 mod layers;
 
 use std::path::{Path, PathBuf};
@@ -16,6 +18,8 @@ commands:
   ci              fmt --check, clippy -D warnings, test, layers, wasm (stops at the first failure)
   layers          enforce the crate dependency layering (AGENTS.md \"Layering\")
   wasm            cargo check --target wasm32-unknown-unknown for the L0-L6 crates (+ pixelcraft-web)
+  icons           render every app icon from assets/app-icon/pixelcraft.svg
+                  (cargo run -p xtask --features icons -- icons, or packaging/icons.sh)
 ";
 
 fn main() -> ExitCode {
@@ -23,6 +27,10 @@ fn main() -> ExitCode {
     let result = match args.first().map(String::as_str) {
         Some("layers") => layers::run(&root()),
         Some("wasm") => cmd_wasm(),
+        #[cfg(feature = "icons")]
+        Some("icons") => icons::run(&root()),
+        #[cfg(not(feature = "icons"))]
+        Some("icons") => Err("build xtask with the icon renderer: cargo run -p xtask --features icons -- icons".into()),
         Some("ci") => cmd_ci(),
         Some("-h" | "--help" | "help") | None => {
             print!("{USAGE}");

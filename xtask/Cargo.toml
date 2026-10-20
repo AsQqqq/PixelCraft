@@ -4,9 +4,15 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 publish = false
-description = "PixelCraft workspace tooling: cargo xtask ci | layers | wasm"
+description = "PixelCraft workspace tooling: cargo xtask ci | layers | wasm | icons"
 
 [lints]
 workspace = true
 
+[features]
+# `icons` renders the app icon set from the master SVG (pure Rust, no system tools except
+# macOS's iconutil for the .icns). Off by default so CI doesn't build the SVG renderer.
+icons = ["dep:resvg"]
+
 [dependencies]
+resvg = { version = "0.45", optional = true }

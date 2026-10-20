@@ -19,7 +19,7 @@ summary. The detail is in:
 | Number | Value | Kind |
 |---|---|---|
 | Commands | 25 | measured: `pixelcraft-cli commands` |
-| Tests | 75 | measured: `cargo test --workspace` |
+| Tests | 78 | measured: `cargo test --workspace` |
 | `.aseprite` support | header only | measured: `crates/ase` |
 
 ## What's next
@@ -33,6 +33,7 @@ summary. The detail is in:
 
 ## Progress log
 
+- **2026-10-20 (0.1.1):** the app icon (the owner's lizard): master SVG, macOS/Windows/Linux/web renders from `packaging/icons.sh` (pure-Rust renderer in xtask), set on the window, the Windows executable, the web favicon and the Home tab.
 - **2026-10-20 (0.1.1):** drawing on a new layer works (cels are created on first paint); pixel cursors are real OS cursors (no lag, no leftovers, every window and dialog); Edit ▸ Preferences with native/pixel cursor, cursor scale and wheel direction.
 - **2026-10-20:** fixes: the pixel cursor only takes over in a focused window (no more two cursors); double-click on the tab strip's free space for New Sprite; Preview window plays the animation on its own (▶/■, Shift+Enter), zooms with the wheel, pans, fits.
 - **2026-10-20:** pixel-art look: PixelCraft's own pixel font built into a TrueType font in code, hand-drawn pixel icons, bevelled controls, no anti-aliasing, a pixel cursor drawn over the UI, the "Dusk" palette.

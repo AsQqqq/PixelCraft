@@ -7,6 +7,10 @@
   </a>
 </p>
 
+<p align="center">
+  <img alt="" src="assets/app-icon/hicolor/128x128/apps/ai.storyteller.pixelcraft.png" width="96" height="96">
+</p>
+
 <h1 align="center">PixelCraft</h1>
 
 <p align="center">
