@@ -2,6 +2,8 @@
 //! frames. The left column holds each layer's eye, lock and name; a dot in a cell marks a cel.
 //! Clicks go through engine commands (`timeline.setCel`, `layer.toggleVisible`, `frame.goTo*`);
 //! a right click selects the frame and opens a menu with New Frame / Delete Frame / New Layer.
+//! Clicking a frame's number selects the whole frame (its column is highlighted): Delete or
+//! Backspace then delete the frame, as in the target app.
 
 use egui::{Align2, FontId, Pos2, Rect, Sense, Stroke, pos2, vec2};
 use serde_json::json;
@@ -44,10 +46,12 @@ pub fn show(app: &mut PixelApp, ui: &mut egui::Ui, t: &Tokens) {
         })
         .collect();
     let (cur_layer, cur_frame) = (d.layer, d.frame);
+    let selected_frame = app.ui.timeline_frame.filter(|&f| f == cur_frame);
     let playing = app.ui.playing;
     let mut click = None;
     let mut transport = None;
     let mut menu_cmd = None;
+    let mut numbers = Vec::new();
     let can_delete = frames > 1;
 
     egui::Panel::bottom("timeline")
@@ -86,9 +90,15 @@ pub fn show(app: &mut PixelApp, ui: &mut egui::Ui, t: &Tokens) {
                     )
                 };
 
+                // A selected frame: its whole column.
+                if let Some(f) = selected_frame {
+                    let col = Rect::from_min_max(cel_rect(0, f).min, pos2(cel_rect(0, f).max.x, area.max.y));
+                    p.rect_filled(col, 0.0, t.row_active);
+                }
                 // Header: frame numbers, the current one highlighted.
                 for f in 0..frames {
                     let r = cel_rect(0, f);
+                    numbers.push(r);
                     if f == cur_frame {
                         p.rect_filled(r.shrink(1.0), 2.0, t.accent);
                     }
@@ -134,6 +144,11 @@ pub fn show(app: &mut PixelApp, ui: &mut egui::Ui, t: &Tokens) {
                     p.line_segment([pos2(area.min.x, y + row_h), pos2(area.max.x, y + row_h)], Stroke::new(1.0, t.border));
                 }
                 p.line_segment([pos2(x0, area.min.y), pos2(x0, area.max.y)], Stroke::new(1.0, t.border));
+                // The selected frame's outline, over the rows.
+                if let Some(f) = selected_frame {
+                    let col = Rect::from_min_max(cel_rect(0, f).min, pos2(cel_rect(0, f).max.x, area.max.y));
+                    p.rect_stroke(col.shrink(1.0), 0.0, Stroke::new(size::UI_PX, t.accent), egui::StrokeKind::Inside);
+                }
 
                 if (resp.clicked() || resp.secondary_clicked())
                     && let Some(pos) = resp.interact_pointer_pos()
@@ -160,6 +175,7 @@ pub fn show(app: &mut PixelApp, ui: &mut egui::Ui, t: &Tokens) {
             });
         });
 
+    app.hit.frame_numbers = numbers;
     match transport {
         Some("") => app.act(UiAction::TogglePlay),
         Some(id) => {
@@ -172,12 +188,16 @@ pub fn show(app: &mut PixelApp, ui: &mut egui::Ui, t: &Tokens) {
             app.run("layer.toggleVisible", &json!({ "layer": l }));
         }
         Some(Click::Layer(l)) => {
+            app.ui.timeline_frame = None;
             app.run("timeline.setCel", &json!({ "layer": l }));
         }
         Some(Click::Frame(f)) => {
-            app.run("timeline.setCel", &json!({ "frame": f }));
+            if app.run("timeline.setCel", &json!({ "frame": f })).is_some() {
+                app.ui.timeline_frame = Some(f);
+            }
         }
         Some(Click::Cel(l, f)) => {
+            app.ui.timeline_frame = None;
             app.run("timeline.setCel", &json!({ "layer": l, "frame": f }));
         }
         None => {}

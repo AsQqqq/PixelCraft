@@ -275,6 +275,10 @@ pub struct UiState {
     /// Edit ▸ Preferences.
     pub prefs: Preferences,
     pub timeline_visible: bool,
+    /// A frame selected in the timeline by clicking its number: Delete/Backspace then delete the
+    /// frame (Frame ▸ Delete Frame) instead of clearing pixels, like the target app. Clicking a
+    /// cel, a layer or the canvas drops it.
+    pub timeline_frame: Option<usize>,
     pub playing: bool,
     /// The sprite pixel under the pointer, for the status bar.
     #[serde(skip)]
@@ -310,6 +314,7 @@ impl Default for UiState {
             pixel_perfect: false,
             prefs: Preferences::default(),
             timeline_visible: true,
+            timeline_frame: None,
             playing: false,
             hover_pixel: None,
             viewports: HashMap::new(),

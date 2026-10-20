@@ -36,7 +36,7 @@ own look. One module per panel in `crates/ui-egui/src/panels/`; sizes in `theme:
 | Colour bar | `color_bar.rs`, `color_picker.rs` | palette in 5 columns (click = foreground, right click = background, corner mark on the foreground), fg/bg swatches (click or X swaps), saturation/value square, hue and alpha strips, palette index and hex |
 | Tool bar | `tool_bar.rs`, `icons.rs` | one icon button per tool, tooltips with the key |
 | Sprite editor | `canvas.rs` | checkerboard, sprite texture (nearest above 100 %, linear below), 1 pt border |
-| Timeline | `timeline.rs` | first/previous/play/next/last; frame numbers; per layer eye, lock, name and one cell per frame (dot = cel); active row, frame and cel highlighted; right click selects and opens New Frame / Delete Frame / New Layer |
+| Timeline | `timeline.rs` | first/previous/play/next/last; frame numbers; per layer eye, lock, name and one cell per frame (dot = cel); active row, frame and cel highlighted; right click selects and opens New Frame / Delete Frame / New Layer; clicking a frame number selects the whole frame (outlined column), and Delete/Backspace then delete the frame |
 | Status bar | `status_bar.rs` | `+ x y` under the pointer, `□ w h`, `Frame: n/total`, zoom `100.0%`; errors replace the left side |
 
 ## Lifecycle
@@ -128,7 +128,8 @@ under any keyboard layout. Engine commands bind through their `shortcut` field; 
 |---|---|
 | B E I Z H V G L U, Shift+U | Pencil, Eraser, Eyedropper, Zoom, Hand, Move, Bucket, Line, Rectangle, Ellipse |
 | Alt (hold) | eyedropper |
-| Delete, Backspace | Edit ▸ Delete: clear the selected pixels (transparent; background colour on a background layer), or the whole cel with nothing selected; the selection stays |
+| Delete, Backspace | with a frame selected in the timeline (its number clicked): Delete Frame; otherwise Edit ▸ Delete: clear the selected pixels (transparent; background colour on a background layer), or the whole cel with nothing selected; the selection stays |
+| Cmd/Ctrl+Z; Cmd/Ctrl+Y, Cmd/Ctrl+Shift+Z, Cmd/Ctrl+R | undo; redo |
 | X | swap foreground and background |
 | Tab | show/hide the timeline |
 | Enter | play/stop |

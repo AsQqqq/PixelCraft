@@ -316,3 +316,56 @@ fn a_photo_bigger_than_the_editor_opens_fitted() {
     assert!(zoom(&h, 0).is_some_and(|z| z < 1.0), "fitted: {:?}", zoom(&h, 0));
     assert_eq!(zoom(&h, 1), Some(1.0), "a small image stays at 100 %");
 }
+
+#[test]
+fn delete_on_a_selected_frame_deletes_the_frame_not_its_pixels() {
+    let mut app = PixelApp::with_new_sprite();
+    app.run("draw.stroke", &json!({ "points": [[1, 1]], "color": "#ff0000" }));
+    app.run("frame.new", &json!({}));
+    app.run("frame.new", &json!({}));
+    let mut h = harness(app);
+    h.run_steps(2);
+    // Click frame 2's number: the frame is selected; Backspace deletes it.
+    let n2 = h.state().hit.frame_numbers[1];
+    click(&mut h, n2.center());
+    h.run_steps(1);
+    assert_eq!(h.state().ui.timeline_frame, Some(1));
+    h.key_press(egui::Key::Backspace);
+    h.run_steps(2);
+    let frames = |h: &egui_kittest::Harness<'static, PixelApp>| h.state().session.active().unwrap().sprite.frames.len();
+    assert_eq!(frames(&h), 2, "the frame itself is gone");
+    // Delete again deletes the next selected frame; the last one stays.
+    h.key_press(egui::Key::Delete);
+    h.run_steps(2);
+    assert_eq!(frames(&h), 1);
+    h.key_press(egui::Key::Delete);
+    h.run_steps(2);
+    assert_eq!(frames(&h), 1, "the only frame stays");
+    assert!(h.state().session.active().unwrap().sprite.cel(0, 0).is_some(), "and keeps its drawing");
+
+    // Clicking a cel instead: Delete clears pixels and keeps every frame.
+    h.state_mut().run("frame.new", &json!({}));
+    h.run_steps(2);
+    h.state_mut().ui.timeline_frame = None;
+    h.key_press(egui::Key::Delete);
+    h.run_steps(2);
+    assert_eq!(frames(&h), 2);
+}
+
+#[test]
+fn redo_has_three_keys() {
+    let shift_cmd = egui::Modifiers { shift: true, ..egui::Modifiers::COMMAND };
+    for (mods, key) in [(egui::Modifiers::COMMAND, egui::Key::Y), (shift_cmd, egui::Key::Z), (egui::Modifiers::COMMAND, egui::Key::R)] {
+        let mut app = PixelApp::with_new_sprite();
+        app.run("draw.stroke", &json!({ "points": [[1, 1]], "color": "#ff0000" }));
+        let mut h = harness(app);
+        h.run_steps(1);
+        h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::Z);
+        h.run_steps(1);
+        assert_eq!(h.state().session.active().unwrap().redo.len(), 1, "undone");
+        h.key_press_modifiers(mods, key);
+        h.run_steps(1);
+        let d = h.state().session.active().unwrap();
+        assert_eq!((d.undo.len(), d.redo.len()), (1, 0), "{mods:?}+{key:?} redoes");
+    }
+}

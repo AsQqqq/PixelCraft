@@ -112,6 +112,8 @@ pub struct HitRects {
     pub tab_free: Option<egui::Rect>,
     /// The Preview window's play/stop button.
     pub preview_play: Option<egui::Rect>,
+    /// The timeline's frame numbers, first frame first.
+    pub frame_numbers: Vec<egui::Rect>,
 }
 
 impl Default for PixelApp {
@@ -173,10 +175,18 @@ impl PixelApp {
             "file.new" => self.act(UiAction::NewFile),
             "file.close" => self.act(UiAction::CloseTab),
             "file.open" => self.request_open(),
-            // A background layer is cleared to the background colour.
+            // With a frame selected in the timeline, Delete deletes that frame; otherwise it clears
+            // pixels, and a background layer is cleared to the background colour.
             "edit.clear" => {
-                let color = self.ui.bg.to_hex();
-                self.run(id, &json!({ "color": color }));
+                let current = self.session.active().map(|d| d.frame);
+                if self.ui.timeline_frame.take().is_some_and(|f| Some(f) == current) {
+                    if self.run("frame.remove", &json!({})).is_some() {
+                        self.ui.timeline_frame = self.session.active().map(|d| d.frame);
+                    }
+                } else {
+                    let color = self.ui.bg.to_hex();
+                    self.run(id, &json!({ "color": color }));
+                }
             }
             _ => {
                 self.run(id, &json!({}));

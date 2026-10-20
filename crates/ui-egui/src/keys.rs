@@ -82,6 +82,19 @@ fn ui_chord(c: Chord) -> Option<UiAction> {
     })
 }
 
+/// Commands with a second key bind it here (the engine's `shortcut` holds one): Backspace is
+/// Delete (Edit ▸ Delete; it is also the key macOS keyboards label "delete"), and
+/// Ctrl/Cmd+Shift+Z and Ctrl/Cmd+R are Redo (Ctrl/Cmd+Y), like the target app.
+fn second_key(c: Chord) -> Chord {
+    if c == Chord::plain(Key::Backspace) {
+        Chord::plain(Key::Delete)
+    } else if c == (Chord { shift: true, ..Chord::cmd(Key::Z) }) || c == Chord::cmd(Key::R) {
+        Chord::cmd(Key::Y)
+    } else {
+        c
+    }
+}
+
 /// The tool a key selects: the first tool with that key, or — pressed again — the next one
 /// sharing it (U: Rectangle ↔ Filled Rectangle, R: Blur ↔ Jumble…).
 pub fn tool_for(c: Chord, current: Tool) -> Option<Tool> {
@@ -121,9 +134,7 @@ pub fn handle(app: &mut PixelApp, ctx: &egui::Context) {
             }
             continue;
         }
-        // Backspace is Delete's second key (Edit ▸ Delete), like the target app; it is also the key
-        // macOS keyboards label "delete".
-        let chord = if chord == Chord::plain(Key::Backspace) { Chord::plain(Key::Delete) } else { chord };
+        let chord = second_key(chord);
         let hit = command_specs().iter().find(|c| c.shortcut.and_then(Chord::parse) == Some(chord));
         if let Some(spec) = hit {
             app.invoke(spec.id);

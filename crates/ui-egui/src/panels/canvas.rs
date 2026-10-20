@@ -261,6 +261,10 @@ pub fn show(app: &mut PixelApp, ui: &mut egui::Ui, t: &Tokens) {
     }
 
     let resp = ui.allocate_rect(view, egui::Sense::click_and_drag());
+    // Working on the canvas leaves the timeline's frame selection.
+    if resp.is_pointer_button_down_on() {
+        app.ui.timeline_frame = None;
+    }
     let pointer = resp.hover_pos().or(resp.interact_pointer_pos());
     app.canvas.pointer = pointer;
     let inside = |(x, y): (i32, i32)| x >= 0 && y >= 0 && (x as f32) < ssize.x && (y as f32) < ssize.y;

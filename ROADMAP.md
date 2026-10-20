@@ -20,7 +20,7 @@ summary. The detail is in:
 | Number | Value | Kind |
 |---|---|---|
 | Commands | 28 | measured: `pixelcraft-cli commands` |
-| Tests | 101 | measured: `cargo test --workspace` |
+| Tests | 103 | measured: `cargo test --workspace` |
 | `.aseprite` support | header only | measured: `crates/ase` |
 
 ## What's next
@@ -34,6 +34,8 @@ summary. The detail is in:
 
 ## Progress log
 
+- **2026-10-20 (0.1.3-beta):** Redo also on Cmd/Ctrl+Shift+Z and Cmd/Ctrl+R (as well as Cmd/Ctrl+Y).
+- **2026-10-20 (0.1.3-beta):** clicking a frame number in the timeline selects the frame; Delete/Backspace then delete the frame itself (before, they only cleared its pixels and left an empty frame in the animation).
 - **2026-10-20 (0.1.3-beta):** opening images: File ▸ Open... (Cmd+O, Home link; the OS dialog, the browser's picker on the web) and drag-and-drop open PNG, JPEG, GIF (animated: every frame), BMP, WebP, TGA, ICO, TIFF, PNM and QOI as new tabs (`file.open`); big images open fitted and draw in tiles past the GPU texture limit (fixes a crash risk).
 - **2026-10-20 (0.1.3-beta):** Frame ▸ Delete Frame (`frame.remove`, Alt+C, timeline right-click menu): removes the frame and its cels, shrinks tags, one undo step; the only frame stays.
 - **2026-10-20 (0.1.3-beta):** Edit ▸ Delete (`edit.clear`, Delete or Backspace) clears the selected pixels, in every colour mode; the whole cel without a selection; the background colour on a background layer.
